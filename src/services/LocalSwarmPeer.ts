@@ -65,6 +65,14 @@ export class LocalSwarmPeer {
     return true;
   }
 
+  broadcast(message: unknown): number {
+    let sentCount = 0;
+    for (const peerId of this.peers.keys()) {
+      if (this.send(peerId, message)) sentCount += 1;
+    }
+    return sentCount;
+  }
+
   close(peerId: string): void {
     const peer = this.peers.get(peerId);
     if (!peer) return;
