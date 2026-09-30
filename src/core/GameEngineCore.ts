@@ -1,3 +1,7 @@
+import { StrategicParadoxDirector } from './StrategicParadoxDirector';
+import { MultiversalDriftManager } from './MultiversalDriftManager';
+import { SentraBlueprintGraph } from './SentraBlueprintGraph';
+
 export interface GameEntity {
   id: string;
   type: string;
@@ -11,12 +15,56 @@ export interface GrinderResult {
   quality: number;
 }
 
+export interface GameEngineEvent {
+  type: string;
+  data: unknown;
+  source: string;
+  timestamp: number;
+}
+
+type GameEngineEventListener = (event: GameEngineEvent) => void;
+
+class GameEngineEventBus {
+  private readonly listeners = new Set<GameEngineEventListener>();
+
+  publish(type: string, data: unknown, source: string): void {
+    const event = { type, data, source, timestamp: Date.now() };
+    for (const listener of this.listeners) listener(event);
+  }
+
+  subscribe(listener: GameEngineEventListener): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+}
+
 export class GameEngineCore {
+  public readonly eventBus = new GameEngineEventBus();
+  public readonly paradoxDirector = new StrategicParadoxDirector();
+  public readonly multiversalManager = new MultiversalDriftManager();
+  public readonly mainGraph = new SentraBlueprintGraph('main-survival-flow');
   private readonly entities = new Map<string, GameEntity>();
   private readonly tickRate = 60;
+  private isRunning = false;
 
   constructor() {
-    console.log('[Conquer Engine] Core initialized.');
+    console.log('[GameEngineCore] Sentra Core fully initialized and integrated.');
+  }
+
+  start(): void {
+    if (this.isRunning) return;
+    this.isRunning = true;
+    this.eventBus.publish('ENTITY_UPDATED', { status: 'ENGINE_STARTED' }, 'GameEngineCore');
+    console.log('[GameEngineCore] Engine tick loop started.');
+  }
+
+  update(_deltaTime: number): void {
+    if (!this.isRunning) return;
+  }
+
+  stop(): void {
+    this.isRunning = false;
+    console.log('[GameEngineCore] Engine stopped.');
   }
 
   registerEntity(entity: GameEntity): void {
