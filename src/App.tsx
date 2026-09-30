@@ -4,11 +4,34 @@ import { MasterEngineDashboard } from './components/MasterEngineDashboard';
 import { InterfaceSettings } from './components/InterfaceSettings';
 import { VisionScreen } from './components/VisionScreen';
 import { VisionOnboarding } from './components/VisionOnboarding';
+import { GameDashboard } from './components/GameDashboard';
 import BlindModeRoute from './components/BlindModeRoute';
 import { AppProvider } from './context/AppContext';
+import { GameEngineCore } from './core/GameEngineCore';
 
 function getRoute(): string {
   return window.location.pathname.replace(/\/+$/, '') || '/';
+}
+
+function GameRoute({ onBack }: { onBack: () => void }) {
+  const [engine] = useState(() => new GameEngineCore());
+
+  useEffect(() => {
+    engine.start();
+    return () => engine.stop();
+  }, [engine]);
+
+  return (
+    <>
+      <InterfaceSettings />
+      <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
+        <button type="button" onClick={onBack} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+          VOLVER
+        </button>
+      </nav>
+      <GameDashboard engine={engine} />
+    </>
+  );
 }
 
 export default function App() {
@@ -25,6 +48,10 @@ export default function App() {
     setRoute(nextRoute);
   };
 
+  if (route === '/game') {
+    return <GameRoute onBack={() => navigate('/')} />;
+  }
+
   if (route === '/core') {
     return (
       <>
@@ -35,6 +62,9 @@ export default function App() {
           </button>
           <button type="button" onClick={() => navigate('/blind')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
             MODO ACCESIBLE
+          </button>
+          <button type="button" onClick={() => navigate('/game')} className="min-h-11 border border-amber-200/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-amber-100 hover:bg-amber-200 hover:text-black">
+            JUEGO
           </button>
           <button type="button" onClick={() => navigate('/')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
             VOLVER A VISIÓN
@@ -66,9 +96,14 @@ export default function App() {
       <>
         <InterfaceSettings />
         <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
-          <button type="button" onClick={() => navigate('/core')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
-            CONQUER ENGINE
-          </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => navigate('/game')} className="min-h-11 border border-amber-200/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-amber-100 hover:bg-amber-200 hover:text-black">
+              JUEGO
+            </button>
+            <button type="button" onClick={() => navigate('/core')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+              CONQUER ENGINE
+            </button>
+          </div>
         </nav>
         <MasterEngineDashboard />
       </>
