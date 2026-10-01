@@ -1,14 +1,13 @@
 {
   "name": "Conquer of Darkness",
-  "short_name": "Conquer Core",
-  "description": "Plataforma gaming de orquestacion inteligente basada en Sentra Core.",
+  "short_name": "Conquer",
+  "description": "Prototipo de supervivencia sci-fi y laboratorio de Sentra Core Orchestrator.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0a0a0f",
-  "theme_color": "#00d4ff",
-  "categories": ["health", "accessibility", "productivity", "utilities"],
-    "categories": ["games", "entertainment", "utilities"],
+  "background_color": "#101610",
+  "theme_color": "#d7ff52",
+  "categories": ["games", "entertainment", "utilities"],
   "icons": [
     {
       "src": "/icon.svg",

@@ -1,22 +1,29 @@
-# Conquer-of_Darkness
 # Conquer of Darkness
 
-**Motor de orquestacion gaming construido sobre Sentra Core.**
+**Un prototipo de supervivencia sci-fi impulsado por Sentra Core Orchestrator.**
 
-Conquer of Darkness es la linea gaming de Sentra: una base para coordinar sistemas de juego, agentes inteligentes y experiencias adaptativas, con ejecucion local y control del usuario.
+El refugio no sigue un guion. El mundo responde. Conquer of Darkness explora una colonia al borde del colapso, donde las decisiones del jugador alteran la moral, los recursos, las facciones y las condiciones de la siguiente crisis.
 
-## Enfoque
+> Un mundo hostil. Un refugio que decide. Un orquestador que recuerda.
 
-- Orquestacion de agentes y sistemas de juego con decisiones trazables.
-- Adaptacion a recursos y estado de la sesion para mantener una experiencia fluida.
-- Integracion modular de voz, vision, sensores y accesibilidad cuando el juego los necesite.
-- Arquitectura offline-first para que las funciones locales no dependan de servicios remotos.
+## Demo
 
-## Estado
+La aplicacion web incluye una demo operativa de crisis estrategicas y paneles para explorar el motor:
 
-Este repositorio contiene la base de Sentra Core adaptada como plataforma gaming. La capa especifica de runtime de juego esta en desarrollo: este proyecto aun no incluye un motor de renderizado 3D, simulacion fisica ni networking multijugador.
+- `/game` — centro de operaciones: resuelve crisis y observa sus efectos sobre el refugio.
+- `/core` — dashboard de Sentra Core y su estado multiversal.
+- `/master-engine` — controles del motor maestro.
+- `/blind` y `/vision` — interfaces de asistencia y accesibilidad.
 
-## Desarrollo
+La portada en `/` conecta estas superficies y presenta el ciclo del orquestador.
+
+## Sentra Core Orchestrator
+
+El core conecta percepcion, decisiones y cambios persistentes del mundo. La base actual contiene sistemas de crisis estrategicas, deriva multiversal, memoria de civilizacion, facciones, comportamiento adaptativo y una capa de eventos para entidades de juego.
+
+El proyecto es un prototipo de software: **todavia no incluye un runtime 3D completo, simulacion fisica, guardado durable multiplataforma ni networking multijugador**. La carpeta `godot/` contiene un controlador experimental; no forma parte del build web de Vite.
+
+## Desarrollo local
 
 Requiere Node.js y npm.
 
@@ -25,13 +32,21 @@ npm ci
 npm run dev
 ```
 
-Build y verificacion de tipos:
+Verificacion de tipos y build de produccion:
 
 ```bash
-npm run build
 npm run typecheck
+npm run build
 ```
 
-## Base tecnologica
+## Mapa del repositorio
 
-La aplicacion web usa React, TypeScript y Vite. Los modulos de Sentra Core aportan orquestacion, percepcion, audio, adaptacion y accesibilidad; las integraciones concretas de gameplay se incorporaran como sistemas y plugins de esta plataforma.
+- `src/core/` — orquestador y sistemas de juego escritos en TypeScript.
+- `src/components/` — portada, dashboards e interfaces de la aplicacion.
+- `godot/` — prototipos de control para una futura integracion con Godot.
+- `docs/` — arquitectura, vision y decisiones del proyecto.
+- `server/` — servicios auxiliares y protocolos de Sentra.
+
+## Direccion
+
+Conquer of Darkness es la linea gaming de Sentra Core. El siguiente paso es convertir los sistemas adaptativos y las decisiones trazables en un runtime jugable mas amplio, manteniendo la ejecucion local, la accesibilidad y el control del jugador.

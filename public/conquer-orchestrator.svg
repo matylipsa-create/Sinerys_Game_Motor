@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="920" viewBox="0 0 1200 920" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="185" y1="35" x2="1018" y2="870" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#263126" stop-opacity=".1"/>
+      <stop offset=".62" stop-color="#19221a" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#101610" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="core" x1="444" y1="281" x2="755" y2="638" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#efff9a"/>
+      <stop offset=".47" stop-color="#d7ff52"/>
+      <stop offset="1" stop-color="#70a941"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="600" y1="570" x2="600" y2="812" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d7ff52" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#d7ff52" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" stroke="#93a58b" stroke-opacity=".16" stroke-width="1"/>
+    </pattern>
+    <filter id="core-glow" x="402" y="238" width="396" height="431" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="19"/>
+    </filter>
+    <clipPath id="frame"><path d="M600 47 1010 284v352L600 873 190 636V284L600 47Z"/></clipPath>
+  </defs>
+  <path d="M600 47 1010 284v352L600 873 190 636V284L600 47Z" fill="url(#sky)"/>
+  <path d="M600 47 1010 284v352L600 873 190 636V284L600 47Z" stroke="#788873" stroke-opacity=".33" stroke-width="2"/>
+  <g clip-path="url(#frame)">
+    <path d="M150 94h900v690H150z" fill="url(#grid)"/>
+    <path d="M154 681 291 606l91 44 122-126 84 66 99-127 75 69 116-91 139 108v184H154V681Z" fill="#1b251c" stroke="#63715f" stroke-opacity=".55" stroke-width="2"/>
+    <path d="m169 730 125-74 111 48 99-121 91 68 89-104 105 84 83-38 113 72" stroke="#a7b79d" stroke-opacity=".39" stroke-width="2"/>
+    <path d="M600 568 448 847h304L600 568Z" fill="url(#beam)"/>
+    <path d="M222 794h756M282 825h636M352 855h496" stroke="#71806d" stroke-opacity=".42"/>
+    <path d="M379 683v-74l39-24 38 24v74m328 0v-74l39-24 38 24v74M520 714V617l38-23 38 23v97m46 0V617l38-23 38 23v97" stroke="#899985" stroke-opacity=".55" stroke-width="2"/>
+    <path d="M446 671h31m247 0h31M530 651h21m98 0h21" stroke="#ed7655" stroke-width="4"/>
+    <path d="M600 57v151m401 76-129 74m129 278-129-75M600 864V709m-401-73 129-75m-129-277 129 75" stroke="#677763" stroke-opacity=".55" stroke-dasharray="8 12" stroke-width="2"/>
+  </g>
+  <path d="M600 104 947 304v300L600 804 253 604V304L600 104Z" stroke="#d7ff52" stroke-opacity=".46" stroke-width="2"/>
+  <path d="M600 156 857 304v222L600 674 343 526V304l257-148Z" stroke="#73d8c1" stroke-opacity=".52" stroke-width="2"/>
+  <path d="M600 185 827 316v196L600 643 373 512V316l227-131Z" stroke="#ed7655" stroke-opacity=".62" stroke-width="3" stroke-dasharray="86 22 38 20"/>
+  <path d="M600 248 746 332v168L600 584 454 500V332l146-84Z" fill="#131c15" stroke="#d7ff52" stroke-width="3"/>
+  <path d="M600 248 746 332v168L600 584 454 500V332l146-84Z" fill="#d7ff52" fill-opacity=".11" filter="url(#core-glow)"/>
+  <path d="M600 288 708 350v124l-108 62-108-62V350l108-62Z" fill="url(#core)" stroke="#f0ffb5" stroke-width="3"/>
+  <path d="m600 288 0 124 108-62m-108 62-108-62m108 62v124" stroke="#526d38" stroke-opacity=".75" stroke-width="2"/>
+  <path d="M600 328 673 370v84l-73 42-73-42v-84l73-42Z" fill="#142016" stroke="#f2ffd0" stroke-width="2"/>
+  <path d="m600 349 55 32v63l-55 32-55-32v-63l55-32Z" fill="#d7ff52"/>
+  <path d="m600 365 39 23v45l-39 23-39-23v-45l39-23Z" fill="#263821"/>
+  <path d="m600 381 24 14v28l-24 14-24-14v-28l24-14Z" fill="#ed7655"/>
+  <circle cx="600" cy="409" r="8" fill="#f2f0df"/>
+  <path d="M600 183v-68m230 201 62-36m-62 264 60 35M600 643v67m-227-198-62 36m62-264-61-35" stroke="#c0ccba" stroke-opacity=".7" stroke-width="2"/>
+  <path d="M588 114h24m-12-12v24M821 305h20m-10-10v20M821 516h20m-10-10v20M588 710h24m-12-12v24M359 516h20m-10-10v20M359 305h20m-10-10v20" stroke="#d7ff52" stroke-width="3"/>
+  <path d="m276 260 12-7 12 7v14l-12 7-12-7v-14Z" fill="#73d8c1"/>
+  <path d="m900 620 12-7 12 7v14l-12 7-12-7v-14Z" fill="#ed7655"/>
+  <path d="m875 237 10-6 10 6v12l-10 6-10-6v-12Z" fill="#d7ff52"/>
+  <path d="M268 247h112m-112 0v-26h68m486 391h94m-94 0v26h49M844 226h82m-82 0v-23h-56" stroke="#899985" stroke-opacity=".76" stroke-width="1.5"/>
+  <path d="M230 206h112m-112 0v-28h55M835 673h112m-112 0v24h66" stroke="#899985" stroke-opacity=".55" stroke-width="1.5"/>
+  <path d="M264 174h82M862 696h92" stroke="#d7ff52" stroke-opacity=".78" stroke-width="2"/>
+  <path d="M528 798h144" stroke="#ed7655" stroke-width="3"/>
+  <path d="M560 813h80" stroke="#73d8c1" stroke-opacity=".7" stroke-width="2"/>
+</svg>

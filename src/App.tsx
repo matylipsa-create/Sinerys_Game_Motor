@@ -5,6 +5,7 @@ import { InterfaceSettings } from './components/InterfaceSettings';
 import { VisionScreen } from './components/VisionScreen';
 import { VisionOnboarding } from './components/VisionOnboarding';
 import { GameDashboard } from './components/GameDashboard';
+import { ConquerHome } from './components/ConquerHome';
 import BlindModeRoute from './components/BlindModeRoute';
 import { AppProvider } from './context/AppContext';
 import { GameEngineCore } from './core/GameEngineCore';
@@ -50,6 +51,15 @@ export default function App() {
 
   if (route === '/game') {
     return <GameRoute onBack={() => navigate('/')} />;
+  }
+
+  if (route === '/blind') {
+    return (
+      <>
+        <InterfaceSettings />
+        <AppProvider><BlindModeRoute /></AppProvider>
+      </>
+    );
   }
 
   if (route === '/core') {
@@ -110,15 +120,5 @@ export default function App() {
     );
   }
 
-  return (
-    <>
-      <InterfaceSettings />
-      <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
-        <button type="button" onClick={() => navigate('/core')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
-          CONQUER ENGINE
-        </button>
-      </nav>
-      <AppProvider><BlindModeRoute /></AppProvider>
-    </>
-  );
+  return <ConquerHome onNavigate={navigate} />;
 }
