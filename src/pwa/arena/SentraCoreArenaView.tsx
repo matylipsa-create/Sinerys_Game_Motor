@@ -111,7 +111,7 @@ export function SentraCoreArenaView({ onNavigate }: SentraCoreArenaViewProps) {
         <div className="arena-live"><span /> SIMULACIÓN LOCAL</div>
         <nav aria-label="Navegación de arena">
           <button type="button" onClick={() => onNavigate('/core')}>SENTRA CORE</button>
-          <button type="button" onClick={() => onNavigate('/blind')}>ACCESIBILIDAD</button>
+          <button type="button" onClick={() => onNavigate('/game')}>OPERACIONES</button>
           <button type="button" className="arena-exit" onClick={() => onNavigate('/')}>SALIR</button>
         </nav>
       </header>

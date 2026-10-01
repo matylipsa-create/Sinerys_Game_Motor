@@ -9,8 +9,6 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-declare module '@tensorflow/tfjs';
-
 // ── Web Speech API ──────────────────────────────────────────────────────
 interface SpeechRecognition extends EventTarget {
   lang: string;

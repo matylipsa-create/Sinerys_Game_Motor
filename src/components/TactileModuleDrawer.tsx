@@ -4,7 +4,6 @@ import { deviceManager } from '../core/DeviceManager';
 import { moduleManager } from '../modules/ModuleManager';
 
 const MODULES: { id: ModuleName; label: string; icon: string }[] = [
-  { id: 'vision', label: 'Vision', icon: '\u{1F441}' },
   { id: 'seguridad', label: 'Seguridad', icon: '\u{1F6E1}' },
   { id: 'movimiento', label: 'Movimiento', icon: '\u{1F9ED}' },
   { id: 'aprendizaje', label: 'Aprendizaje', icon: '\u{1F4DA}' },

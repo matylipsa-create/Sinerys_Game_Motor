@@ -15,26 +15,26 @@ export interface ReporteMejorasPayload {
 }
 
 export const generarInformeMejoras = (): ReporteMejorasPayload => ({
-  modulo: 'Sentra Visión',
-  version: '1.0.0',
+  modulo: 'Conquer of Darkness',
+  version: '0.4.0',
   timestamp: new Date().toISOString(),
   recomendaciones: [
     {
-      categoria: 'UI/UX',
-      descripcion: 'Disposición de menús y temas visuales (verde táctico / azul ciberpunk).',
-      accionSugerida: 'Implementar accesos directos o gestos personalizados para cambio rápido.',
+      categoria: 'Gameplay',
+      descripcion: 'La arena y las crisis estratégicas todavía usan progresión local de demostración.',
+      accionSugerida: 'Conectar las acciones de arena con una sesión de juego y objetivos persistentes.',
       prioridad: 'Media',
     },
     {
-      categoria: 'Telemetría',
-      descripcion: 'Monitoreo en tiempo real de sensores (acelerómetro, giroscopio, GPS, calidad de aire).',
-      accionSugerida: 'Añadir filtros avanzados y alertas gráficas ante umbrales críticos.',
+      categoria: 'Rendimiento',
+      descripcion: 'El tamaño y la latencia de los módulos de IA afectan el presupuesto de cada frame.',
+      accionSugerida: 'Medir FPS e inferencia durante combates y cargar modelos solo cuando se necesiten.',
       prioridad: 'Alta',
     },
     {
-      categoria: 'Exportación de Datos',
-      descripcion: 'Ampliación de los formatos de control basados en registros.',
-      accionSugerida: 'Asegurar soporte nativo para descarga estructurada en JSON y CSV desde el servicio actual.',
+      categoria: 'Registro de sesión',
+      descripcion: 'Las decisiones del refugio aún no tienen una línea temporal exportable de la partida.',
+      accionSugerida: 'Añadir exportación JSON/CSV para revisar crisis, costes y cambios del mundo.',
       prioridad: 'Alta',
     },
   ],

@@ -63,13 +63,14 @@ export class StrategicParadoxDirector {
   triggerSystemicCrisis(sector: string): ParadoxCrisisEvent {
     const affectedSector = sector.trim();
     if (!affectedSector) throw new Error('A crisis requires an affected sector.');
+    const sectorLabel = /^sector(?:\s|$)/i.test(affectedSector) ? affectedSector : `Sector ${affectedSector}`;
 
     const timestamp = Date.now();
     const crisisId = `crisis-${timestamp}-${this.nextCrisisId++}`;
     const crisis: ParadoxCrisisEvent = {
       id: crisisId,
-      title: `Falla Estructural en Sector ${affectedSector}`,
-      description: `La presión de la colmena fúngica ha comprometido los sellos del sector ${affectedSector}. Los recursos de purificación están al límite y las facciones locales exigen una respuesta inmediata.`,
+      title: `Falla Estructural en ${sectorLabel}`,
+      description: `La presión de la colmena fúngica ha comprometido los sellos de ${sectorLabel}. Los recursos de purificación están al límite y las facciones locales exigen una respuesta inmediata.`,
       severity: 'critical',
       affectedSector,
       timestamp,
@@ -103,6 +104,10 @@ export class StrategicParadoxDirector {
 
     this.activeCrises.set(crisisId, crisis);
     return cloneCrisis(crisis);
+  }
+
+  discardCrisis(crisisId: string): boolean {
+    return this.activeCrises.delete(crisisId);
   }
 
   resolveCrisis(crisisId: string, choiceId: string): CrisisResolution {

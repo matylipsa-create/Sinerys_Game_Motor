@@ -17,7 +17,6 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
           <div className="conquer-nav-status"><span /> SENTRA CORE / ONLINE</div>
           <nav className="conquer-nav" aria-label="Navegación principal">
             <button type="button" className="conquer-nav-link" onClick={() => onNavigate('/core')}>EL MOTOR</button>
-            <button type="button" className="conquer-nav-link" onClick={() => onNavigate('/blind')}>ACCESIBILIDAD</button>
             <button type="button" className="conquer-nav-cta" onClick={() => onNavigate('/arena')}>ENTRAR A LA ARENA <span aria-hidden="true">↗</span></button>
           </nav>
         </header>
@@ -80,7 +79,6 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/arena')}><span className="conquer-access-index">A</span><span><strong>Sala de arena</strong><small>Entrena las mecánicas tácticas de Conquer.</small></span><b aria-hidden="true">↗</b></button>
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/game')}><span className="conquer-access-index">B</span><span><strong>Centro de operaciones</strong><small>Resuelve una crisis sistémica en la demo estratégica.</small></span><b aria-hidden="true">↗</b></button>
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/core')}><span className="conquer-access-index">C</span><span><strong>Sentra Core</strong><small>Explora el orquestador y sus módulos adaptativos.</small></span><b aria-hidden="true">↗</b></button>
-        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/blind')}><span className="conquer-access-index">D</span><span><strong>Modo accesible</strong><small>Abre la interfaz de asistencia y navegación accesible.</small></span><b aria-hidden="true">↗</b></button>
       </section>
 
       <footer className="conquer-footer"><a className="conquer-footer-brand" href="/">CONQUER OF DARKNESS</a><span>UN PROYECTO DE SENTRA CORE</span><span>PROTOTIPO EN DESARROLLO · 2026</span></footer>

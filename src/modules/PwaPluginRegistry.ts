@@ -2,10 +2,6 @@ import { HotPlugRegistry, type HotPlugPlugin } from '../core/HotPlugRegistry';
 
 export const pwaPluginRegistry = new HotPlugRegistry<void>();
 
-registerPwaPluginLoader('vision', async () => {
-	const { terminateOCR } = await import('../services/OCREngine');
-	return { id: 'vision', version: '1.0.0', activate() {}, deactivate: () => terminateOCR() };
-});
 registerPwaPluginLoader('telemetry', async () => {
 	const { sensorHub } = await import('../core/SensorHub');
 	return {

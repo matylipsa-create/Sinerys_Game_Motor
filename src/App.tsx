@@ -2,13 +2,9 @@ import { useEffect, useState } from 'react';
 import { SentraCoreDashboard } from './components/SentraCoreDashboard';
 import { MasterEngineDashboard } from './components/MasterEngineDashboard';
 import { InterfaceSettings } from './components/InterfaceSettings';
-import { VisionScreen } from './components/VisionScreen';
-import { VisionOnboarding } from './components/VisionOnboarding';
 import { GameDashboard } from './components/GameDashboard';
 import { ConquerHome } from './components/ConquerHome';
 import { SentraCoreArenaView } from './pwa/arena/SentraCoreArenaView';
-import BlindModeRoute from './components/BlindModeRoute';
-import { AppProvider } from './context/AppContext';
 import { GameEngineCore } from './core/GameEngineCore';
 
 function getRoute(): string {
@@ -58,15 +54,6 @@ export default function App() {
     return <SentraCoreArenaView onNavigate={navigate} />;
   }
 
-  if (route === '/blind') {
-    return (
-      <>
-        <InterfaceSettings />
-        <AppProvider><BlindModeRoute /></AppProvider>
-      </>
-    );
-  }
-
   if (route === '/core') {
     return (
       <>
@@ -75,8 +62,8 @@ export default function App() {
           <button type="button" onClick={() => navigate('/master-engine')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
             MASTER ENGINE
           </button>
-          <button type="button" onClick={() => navigate('/blind')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
-            MODO ACCESIBLE
+          <button type="button" onClick={() => navigate('/arena')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+            SALA DE ARENA
           </button>
           <button type="button" onClick={() => navigate('/game')} className="min-h-11 border border-amber-200/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-amber-100 hover:bg-amber-200 hover:text-black">
             JUEGO
@@ -85,23 +72,7 @@ export default function App() {
             VOLVER A CONQUER
           </button>
         </nav>
-        <SentraCoreDashboard onOpenVisionDemo={() => navigate('/')} />
-      </>
-    );
-  }
-
-  if (route === '/vision') {
-    return (
-      <>
-        <InterfaceSettings />
-        <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
-          <button type="button" onClick={() => navigate('/')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
-            ASISTENTE ACCESIBLE
-          </button>
-        </nav>
-        <AppProvider>
-          <VisionOnboarding><VisionScreen /></VisionOnboarding>
-        </AppProvider>
+        <SentraCoreDashboard />
       </>
     );
   }
@@ -120,7 +91,7 @@ export default function App() {
             </button>
           </div>
         </nav>
-        <MasterEngineDashboard />
+        <MasterEngineDashboard onNavigate={navigate} />
       </>
     );
   }

@@ -103,11 +103,13 @@ export class StorageService {
     if (entries.some((evidence) => evidence.signature.publicKey !== localPublicKey)) {
       throw new Error('Local evidence contains multiple signing identities');
     }
-    const tailIndex = entries.at(-1)?.entry.index ?? -1;
+    const lastEntry = entries[entries.length - 1];
+    const tailIndex = lastEntry?.entry.index ?? -1;
     if (afterIndex > tailIndex) throw new Error('Evidence cursor is ahead of the local chain');
     const previousEntry = afterIndex === -1 ? undefined : entries.find(({ entry }) => entry.index === afterIndex);
     if (afterIndex !== -1 && !previousEntry) throw new Error('Evidence cursor is not on the local chain');
     const deltaEntries = entries.filter(({ entry }) => entry.index > afterIndex).slice(0, safeLimit);
+    const lastDeltaEntry = deltaEntries[deltaEntries.length - 1];
     const previousHash = previousEntry?.entry.hash ?? GENESIS_HASH;
 
     return {
@@ -115,9 +117,9 @@ export class StorageService {
       exportId: crypto.randomUUID(),
       sourceId,
       fromIndex: afterIndex + 1,
-      toIndex: deltaEntries.at(-1)?.entry.index ?? afterIndex,
+      toIndex: lastDeltaEntry?.entry.index ?? afterIndex,
       previousHash,
-      endingHash: deltaEntries.at(-1)?.entry.hash ?? previousHash,
+      endingHash: lastDeltaEntry?.entry.hash ?? previousHash,
       createdAt: Date.now(),
       entries: deltaEntries,
     };
@@ -165,9 +167,9 @@ export class StorageService {
     }
 
     if (batch.fromIndex !== batch.entries[0].entry.index
-      || batch.toIndex !== batch.entries.at(-1)?.entry.index
+      || batch.toIndex !== batch.entries[batch.entries.length - 1]?.entry.index
       || batch.previousHash !== batch.entries[0].entry.previousHash
-      || batch.endingHash !== batch.entries.at(-1)?.entry.hash) {
+      || batch.endingHash !== batch.entries[batch.entries.length - 1]?.entry.hash) {
       throw new Error('Evidence delta metadata does not match its entries');
     }
     const sourcePublicKey = batch.entries[0]?.signature?.publicKey;
@@ -185,8 +187,9 @@ export class StorageService {
     const remoteRecords = await this.getSyncedEvidence(batch.sourceId);
     const localEntries = remoteRecords.map((record) => record.evidence).sort((a, b) => a.entry.index - b.entry.index);
     const localByIndex = new Map(localEntries.map((evidence) => [evidence.entry.index, evidence]));
-    let expectedIndex = localEntries.at(-1)?.entry.index ?? -1;
-    let expectedHash = localEntries.at(-1)?.entry.hash ?? GENESIS_HASH;
+    const lastLocalEntry = localEntries[localEntries.length - 1];
+    let expectedIndex = lastLocalEntry?.entry.index ?? -1;
+    let expectedHash = lastLocalEntry?.entry.hash ?? GENESIS_HASH;
     const additions: SyncedEvidenceRecord[] = [];
 
     for (const evidence of batch.entries) {

@@ -43,14 +43,8 @@ function Sparkline({ values, label }: { values: number[]; label: string }) {
   );
 }
 
-interface SentraCoreDashboardProps {
-  onOpenVisionDemo?: () => void;
-}
-
-export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardProps = {}) {
+export function SentraCoreDashboard() {
   const [bus] = useState(() => new ResilientTCREIBus());
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const cameraStreamRef = useRef<MediaStream | null>(null);
   const lastQueuedTelemetryRef = useRef(0);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [busSnapshot, setBusSnapshot] = useState<BusSnapshot>({
@@ -59,7 +53,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
   const [trendSamples, setTrendSamples] = useState<TrendSample[]>([]);
   const [isSystemActive, setIsSystemActive] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'specs' | 'environmental' | 'vision'>('specs');
+  const [activeTab, setActiveTab] = useState<'specs' | 'environmental'>('specs');
   const [logs, setLogs] = useState<string[]>([]);
   const [telemetryFifo, setTelemetryFifo] = useState<TelemetryEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -147,16 +141,6 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
     };
   }, [isSystemActive]);
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    const cameraStream = cameraStreamRef.current;
-    if (!isSystemActive || activeTab !== 'vision' || !videoElement || !cameraStream) return;
-    videoElement.srcObject = cameraStream;
-    void videoElement.play().catch((playError: unknown) => {
-      console.warn('[SentraCoreDashboard] No se pudo mostrar la vista de cámara:', playError);
-    });
-  }, [activeTab, isSystemActive]);
-
   const addLog = useCallback((message: string) => {
     setLogs((current) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...current].slice(0, 5));
   }, []);
@@ -173,9 +157,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
     void bus.enqueue('operator_action', { action: 'activate_core', requestedAt: Date.now() })
       .catch((queueError: unknown) => console.error('[SentraCoreDashboard] No se pudo encolar la activación:', queueError));
     try {
-      const initialized = await sentraFullAwaken(videoRef.current ?? undefined);
-      const stream = videoRef.current?.srcObject;
-      cameraStreamRef.current = stream instanceof MediaStream ? stream : null;
+      const initialized = await sentraFullAwaken();
       addLog(initialized
         ? 'Secuencia completada; los sensores denegados usan respaldo.'
         : 'Modo híbrido activado (sensores virtuales de respaldo).');
@@ -244,7 +226,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
   }, [bus, isSystemActive]);
 
   useEffect(() => () => {
-    sentraEngine.shutdownCore(videoRef.current ?? undefined);
+    sentraEngine.shutdownCore();
   }, []);
 
   const handlePulse = () => {
@@ -269,8 +251,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
   const handleLock = () => {
     void bus.enqueue('operator_action', { action: 'lock_core', requestedAt: Date.now() })
       .catch((queueError: unknown) => console.error('[SentraCoreDashboard] No se pudo encolar el bloqueo:', queueError));
-    sentraEngine.shutdownCore(videoRef.current ?? undefined);
-    cameraStreamRef.current = null;
+    sentraEngine.shutdownCore();
     setMetrics(null);
     setTelemetryFifo([]);
     setIsSystemActive(false);
@@ -283,7 +264,6 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
     <main className="relative min-h-screen overflow-hidden bg-[#05090a] p-4 font-mono text-[#00ffcc] sm:p-6">
       {!isSystemActive ? (
         <section className="relative flex min-h-[calc(100vh-2rem)] flex-col items-center justify-between overflow-hidden border border-[#00ffcc]/10 bg-[#030708] px-5 py-12 sm:min-h-[calc(100vh-3rem)] sm:px-10">
-          <video ref={videoRef} autoPlay playsInline muted aria-hidden="true" className="pointer-events-none absolute h-px w-px opacity-0" />
           <canvas data-sentra-network aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,255,180,0.08)_0%,_transparent_58%)]" />
           <header className="relative z-10 mt-4 text-center sm:mt-8">
@@ -309,7 +289,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
               <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full bg-[#00ffb4] ${isStarting ? 'animate-pulse' : 'animate-ping'}`} />
               {isStarting ? 'INITIALIZING...' : 'START ENGINE'}
             </button>
-            <p className="mt-3 text-[10px] text-[#629583]">La cámara se activa al iniciar el núcleo.</p>
+            <p className="mt-3 text-[10px] text-[#629583]">El motor usa sensores disponibles y valores de respaldo locales.</p>
           </div>
         </section>
       ) : (
@@ -331,11 +311,10 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
 
           {error && <p className="border border-red-500/40 bg-red-950/30 p-3 text-xs text-red-200" role="alert">{error}</p>}
 
-          <nav aria-label="Secciones del núcleo" role="tablist" className="grid grid-cols-3 border-b border-[#00ffcc]/20">
+          <nav aria-label="Secciones del núcleo" role="tablist" className="grid grid-cols-2 border-b border-[#00ffcc]/20">
             {([
               ['specs', 'SPECS MOTOR'],
               ['environmental', 'SENSORES'],
-              ['vision', 'VISIÓN'],
             ] as const).map(([tab, label]) => (
               <button key={tab} id={`core-tab-${tab}`} type="button" role="tab" aria-selected={activeTab === tab} aria-controls={`core-panel-${tab}`} onClick={() => setActiveTab(tab)} className={`min-h-12 border-b-2 px-2 py-3 text-[10px] font-bold tracking-[0.12em] transition sm:text-xs ${activeTab === tab ? 'border-[#00ffb4] bg-[#00ffb4]/[0.06] text-[#c0ffeb]' : 'border-transparent text-[#638f80] hover:text-[#a1d9c4]'}`}>
                 {label}
@@ -365,10 +344,7 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
                     <div className="mt-3 max-h-16 overflow-y-auto border-t border-[#00ffcc]/10 pt-2 text-[#729687]">{logs.length === 0 ? 'Sin acciones registradas.' : logs.map((log) => <div key={log}>{log}</div>)}</div>
                   </section>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <EngineStartButton />
-                  {onOpenVisionDemo && <button type="button" onClick={onOpenVisionDemo} className="min-h-11 border border-[#00ffcc]/35 px-4 py-2 text-[10px] font-bold tracking-wider text-[#aaffdf] transition hover:bg-[#00ffcc]/10">ABRIR DEMO DE VISIÓN</button>}
-                </div>
+                <div className="flex flex-wrap items-center gap-3"><EngineStartButton /></div>
               </div>
             )}
 
@@ -384,26 +360,12 @@ export function SentraCoreDashboard({ onOpenVisionDemo }: SentraCoreDashboardPro
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="border border-[#00ffcc]/15 bg-black/25 p-4"><h3 className="text-[10px] text-[#88b3a2]">AUDIO AMBIENTAL</h3><Sparkline label="Ambient audio" values={trendSamples.flatMap((sample) => sample.audio === null ? [] : [sample.audio])} /></div>
-                  <div className="border border-[#00ffcc]/15 bg-black/25 p-4"><h3 className="text-[10px] text-[#88b3a2]">ACELERÓMETRO · MAGNITUD</h3><strong className="mt-1 block text-sm text-[#c0ffeb]">{trendSamples.at(-1)?.acceleration?.toFixed(2) ?? 'No disponible'} m/s²</strong><Sparkline label="Acceleration" values={trendSamples.flatMap((sample) => sample.acceleration === null ? [] : [sample.acceleration])} /></div>
+                  <div className="border border-[#00ffcc]/15 bg-black/25 p-4"><h3 className="text-[10px] text-[#88b3a2]">ACELERÓMETRO · MAGNITUD</h3><strong className="mt-1 block text-sm text-[#c0ffeb]">{trendSamples[trendSamples.length - 1]?.acceleration?.toFixed(2) ?? 'No disponible'} m/s²</strong><Sparkline label="Acceleration" values={trendSamples.flatMap((sample) => sample.acceleration === null ? [] : [sample.acceleration])} /></div>
                 </div>
                 <p className="text-[10px] leading-relaxed text-[#638f80]">Los valores dependen de los permisos y sensores disponibles en este dispositivo. Los sensores sin lectura aparecen como no disponibles.</p>
               </div>
             )}
 
-            {activeTab === 'vision' && (
-              <div className="flex min-h-[360px] flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#00ffcc]/20 pb-2">
-                  <h2 className="text-xs font-bold tracking-[0.12em] text-[#baffea]">VISIÓN ARTIFICIAL</h2>
-                  <span className="text-[10px] text-[#83e2bd]">INFERENCE: {metrics?.processingLoad.inferenceTimeMs.toFixed(1) ?? '--'} ms</span>
-                </div>
-                <div className="relative flex min-h-[300px] flex-1 items-center justify-center overflow-hidden border border-[#00ffcc]/25 bg-black">
-                  <video ref={videoRef} autoPlay playsInline muted aria-label="Vista de cámara en vivo" className="absolute inset-0 h-full w-full object-cover opacity-80" />
-                  {!isSystemActive && <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-xs text-[#668478]">ESPERANDO ACTIVACIÓN DE CÁMARA...</div>}
-                  <div aria-hidden="true" className="pointer-events-none absolute inset-3 border border-[#00ffcc]/15"><span className="absolute -left-px -top-px h-4 w-4 border-l-2 border-t-2 border-[#00ffcc]" /><span className="absolute -right-px -top-px h-4 w-4 border-r-2 border-t-2 border-[#00ffcc]" /><span className="absolute -bottom-px -left-px h-4 w-4 border-b-2 border-l-2 border-[#00ffcc]" /><span className="absolute -bottom-px -right-px h-4 w-4 border-b-2 border-r-2 border-[#00ffcc]" /></div>
-                  {!isSystemActive && <p className="relative z-10 bg-black/70 px-4 py-2 text-[10px] tracking-wider text-[#83b5a0]">CÁMARA EN ESPERA</p>}
-                </div>
-              </div>
-            )}
           </section>
         </div>
       )}

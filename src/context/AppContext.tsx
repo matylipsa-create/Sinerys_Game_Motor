@@ -33,18 +33,17 @@ import { setCurrentSystemState, type SystemSnapshot } from '../core/InflectionNo
 import { activatePwaPlugin, deactivatePwaPlugin } from '../modules/PwaPluginRegistry';
 
 export type ModuleName =
-  | 'vision' | 'seguridad' | 'movimiento' | 'juego'
+  | 'seguridad' | 'movimiento' | 'juego'
   | 'aprendizaje' | 'impacto' | 'silencio' | 'evidencia' | 'bio' | 'guardian'
   | 'identidad' | 'autopercepcion' | 'cognitivo' | 'bitacora';
 
 function pluginForModule(module: ModuleName): string | null {
-  if (module === 'vision') return 'vision';
   if (module === 'seguridad' || module === 'guardian') return 'security';
   if (module === 'movimiento' || module === 'impacto') return 'telemetry';
   return null;
 }
 
-export type UiMode = 'vision' | 'sentinel';
+export type UiMode = 'gaming' | 'sentinel';
 
 export interface AppState {
   activeModule: ModuleName;
@@ -201,7 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch { /* localStorage unavailable */ }
 
     return {
-      activeModule: 'vision', voiceEnabled: true, humanVeto: false,
+      activeModule: 'juego', voiceEnabled: true, humanVeto: false,
       powerMode: 'normal', syncTransport: 'offline',
       lastResponse: null, lastPerception: null, lastMoralEval: null,
       evidenceCount: 0, geminiRemote: geminiOn && !!effectiveKey,
@@ -210,7 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       bioCurrentSession: null, bioSessions: [], bioReframe: null,
       isBacterialGuardianActive: false, guardianStatus: null, usbPorts: new Map(),
       availableSensors: [],
-      uiMode: 'vision',
+      uiMode: 'gaming',
       cognitiveLoad: savedCognitiveLoad,
       cognitiveMode: 'ASSIST',
       uiDetailMode: savedDetailMode,

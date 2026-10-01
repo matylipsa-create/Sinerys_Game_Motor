@@ -11,7 +11,6 @@ export interface ModuleDef {
 }
 
 export const MODULE_DEFS: ModuleDef[] = [
-  { id: 'vision', label: 'Vision', description: 'Camara + COCO-SSD + descripcion por voz', icon: '\u{1F441}', requiresCamera: true, requiresGPS: false, requiresSensors: false },
   { id: 'seguridad', label: 'Seguridad', description: 'Sensores + alertas + EVOLIS + monitoreo', icon: '\u{1F6E1}', requiresCamera: false, requiresGPS: false, requiresSensors: true },
   { id: 'movimiento', label: 'Movimiento', description: 'GPS + IMU + orientacion + vibracion guia', icon: '\u{1F9ED}', requiresCamera: false, requiresGPS: true, requiresSensors: true },
   { id: 'juego', label: 'Juego', description: 'Narrativa adaptativa', icon: '\u{1F3AE}', requiresCamera: false, requiresGPS: false, requiresSensors: false },

@@ -14,9 +14,8 @@ La aplicacion web incluye una demo operativa de crisis estrategicas y paneles pa
 - `/arena` — sala táctica PWA con tutorial de succión, mutágenos y Bash.
 - `/core` — dashboard de Sentra Core y su estado multiversal.
 - `/master-engine` — controles del motor maestro.
-- `/blind` y `/vision` — interfaces de asistencia y accesibilidad.
 
-La portada en `/` conecta estas superficies y presenta el ciclo del orquestador.
+La portada en `/` conecta las superficies gaming y presenta el ciclo del orquestador. La cámara y la demo visual de Sentra Core Vision no forman parte de esta PWA gaming.
 
 ## Sentra Core Orchestrator
 

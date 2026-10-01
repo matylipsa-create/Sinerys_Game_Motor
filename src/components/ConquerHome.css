@@ -253,8 +253,13 @@
   .conquer-copy,
   .conquer-art { animation: conquer-arrive 650ms ease-out both; }
   .conquer-art { animation-delay: 100ms; }
+  .conquer-art img { animation: reactor-pulse 5s ease-in-out 700ms infinite; }
   @keyframes conquer-arrive {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes reactor-pulse {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.12) saturate(1.14); }
   }
 }

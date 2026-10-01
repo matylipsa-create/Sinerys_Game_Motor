@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { evolis } from '../core/EVOLIS';
 import { storageService } from '../services/StorageService';
-import { initOCR, recognizeText, terminateOCR } from '../services/OCREngine';
 import { ResilientTCREIBus } from '../services/ResilientTCREIBus';
 import { downloadAuditReport, type AuditFormat } from '../services/AuditReportExporter';
 import { downloadImprovementReport, generarInformeMejoras, type ImprovementFormat } from '../services/ImprovementReport';
@@ -77,13 +76,13 @@ class SentraPriorityQueue {
   }
 }
 
-export function MasterEngineDashboard() {
+interface MasterEngineDashboardProps {
+  onNavigate: (route: string) => void;
+}
+
+export function MasterEngineDashboard({ onNavigate }: MasterEngineDashboardProps) {
   const [improvementReport] = useState(generarInformeMejoras);
   const [bus] = useState(() => new ResilientTCREIBus());
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const cameraStreamRef = useRef<MediaStream | null>(null);
-  const cameraRequestRef = useRef(0);
-  const lastQueuedOcrRef = useRef('');
   const queueRef = useRef(new SentraPriorityQueue());
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('OFFLINE');
   const [busMessage, setBusMessage] = useState('Bus local sin conexión.');
@@ -91,9 +90,6 @@ export function MasterEngineDashboard() {
   const [outboxCount, setOutboxCount] = useState(0);
   const [backendPerformance, setBackendPerformance] = useState<BackendPerformance | null>(null);
   const [activeTelemetry, setActiveTelemetry] = useState('Esperando flujo de sensores...');
-  const [ocrText, setOcrText] = useState('Sin texto detectado');
-  const [isStarting, setIsStarting] = useState(false);
-  const [isVisionActive, setIsVisionActive] = useState(false);
   const [snapshotStatus, setSnapshotStatus] = useState('');
   const [auditStatus, setAuditStatus] = useState('');
   const [improvementStatus, setImprovementStatus] = useState('');
@@ -146,96 +142,12 @@ export function MasterEngineDashboard() {
     };
   }, [bus]);
 
-  useEffect(() => {
-    if (!isVisionActive) return undefined;
-    let scanning = false;
-    const interval = window.setInterval(async () => {
-      const video = videoRef.current;
-      if (scanning || !video || video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
-      scanning = true;
-      try {
-        const text = await recognizeText(video);
-        const result = text || 'Sin texto detectado';
-        setOcrText(result);
-        queueRef.current.enqueue({ type: 'OCR_SCAN', text: result }, text ? 1 : 8);
-        const next = queueRef.current.dequeue();
-        if (next) setActiveTelemetry(`Procesado: ${next.type} -> ${next.text}`);
-        if (text && text !== lastQueuedOcrRef.current) {
-          lastQueuedOcrRef.current = text;
-          void bus.enqueue('telemetry', { source: 'ocr', text, capturedAt: Date.now() })
-            .catch((queueError: unknown) => console.error('[MasterEngineDashboard] No se pudo encolar OCR:', queueError));
-        }
-      } catch (ocrError) {
-        console.error('[MasterEngineDashboard] Error de OCR:', ocrError);
-        setError('No se pudo procesar el texto de la cámara.');
-      } finally {
-        scanning = false;
-      }
-    }, 2500);
-    return () => window.clearInterval(interval);
-  }, [bus, isVisionActive]);
-
-  useEffect(() => () => {
-    cameraRequestRef.current += 1;
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-    cameraStreamRef.current = null;
-    void terminateOCR();
-  }, []);
-
-  const handleStartVision = useCallback(async () => {
-    if (isStarting || isVisionActive) return;
-    setIsStarting(true);
-    setError('');
-    setSnapshotStatus('');
-    const requestId = ++cameraRequestRef.current;
-    let stream: MediaStream | null = null;
-    try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera API unavailable');
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      });
-      if (requestId !== cameraRequestRef.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      const video = videoRef.current;
-      if (!video) throw new Error('Camera preview unavailable');
-      cameraStreamRef.current = stream;
-      video.srcObject = stream;
-      await video.play();
-      await initOCR();
-      setOcrText('Analizando imagen...');
-      setIsVisionActive(true);
-      setActiveTelemetry('Cámara activa; iniciando análisis OCR local.');
-    } catch (startError) {
-      stream?.getTracks().forEach((track) => track.stop());
-      cameraStreamRef.current = null;
-      setError(startError instanceof Error && startError.name === 'NotAllowedError'
-        ? 'Permite el acceso a la cámara para iniciar la visión.'
-        : 'No se pudo iniciar la cámara o el motor OCR.');
-    } finally {
-      setIsStarting(false);
-    }
-  }, [isStarting, isVisionActive]);
-
-  const handleStopVision = useCallback(() => {
-    cameraRequestRef.current += 1;
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-    cameraStreamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-    setIsVisionActive(false);
-    setOcrText('Sin texto detectado');
-    void terminateOCR();
-  }, []);
-
   const handleSecureSnapshot = useCallback(async () => {
     setSnapshotStatus('Firmando y guardando...');
     setError('');
     const snapshot = {
       nodeId: 'SENTRA_CORE_01',
       telemetry: activeTelemetry,
-      ocr: ocrText,
       connectionStatus,
       timestamp: Date.now(),
     };
@@ -251,7 +163,7 @@ export function MasterEngineDashboard() {
       setSnapshotStatus('');
       setError('No se pudo guardar la instantánea firmada.');
     }
-  }, [activeTelemetry, bus, connectionStatus, ocrText]);
+  }, [activeTelemetry, bus, connectionStatus]);
 
   const handleAuditExport = useCallback(async (format: AuditFormat) => {
     setIsExporting(true);
@@ -358,7 +270,7 @@ export function MasterEngineDashboard() {
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-5 bg-[#07100e] px-4 pb-6 pt-16 font-mono text-[#d5e8df] sm:px-6 sm:py-6">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#00d4a0]/25 pb-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-[#76ad99]">Edge node & vision pipeline v3.2</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[#76ad99]">Conquer runtime / Sentra orchestration</p>
           <h1 className="mt-1 text-lg font-bold tracking-[0.08em] text-[#9fffd9]">SENTRA MASTER ENGINE</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[10px]">
@@ -379,19 +291,20 @@ export function MasterEngineDashboard() {
 
       {error && <p role="alert" className="border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">{error}</p>}
 
-      <section className="grid flex-1 grid-cols-1 gap-5 md:grid-cols-2" aria-label="Motor de visión y telemetría">
-        <div className="flex min-h-[280px] flex-col border border-[#00d4a0]/20 bg-black/40 p-3">
-          <div className="relative flex-1 overflow-hidden bg-black" style={{ aspectRatio: '4 / 3' }}>
-            <video ref={videoRef} muted playsInline aria-label="Vista en vivo de la cámara" className="absolute inset-0 h-full w-full object-cover opacity-85" />
-            {!isVisionActive && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#030706] px-5 text-center">
-                <p className="text-xs text-[#7eaa98]">La cámara y el OCR se inician cuando lo solicites.</p>
-                <button type="button" onClick={() => void handleStartVision()} disabled={isStarting} className="min-h-11 border border-[#00d4a0]/50 px-4 py-2 text-xs font-bold text-[#aaffdf] transition hover:bg-[#00d4a0]/10 disabled:cursor-wait disabled:opacity-60">
-                  {isStarting ? 'INICIANDO...' : 'INICIAR VISIÓN'}
-                </button>
-              </div>
-            )}
-            {isVisionActive && <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 bg-black/75 px-2 py-2 text-[10px] text-[#aaffdf]"><span className="truncate">OCR LOCAL · {ocrText}</span><button type="button" onClick={handleStopVision} className="min-h-8 shrink-0 border border-[#00d4a0]/40 px-2 hover:bg-[#00d4a0]/10">DETENER</button></div>}
+      <section className="grid flex-1 grid-cols-1 gap-5 md:grid-cols-2" aria-label="Orquestación y telemetría del juego">
+        <div className="flex min-h-[280px] flex-col justify-between gap-5 border border-[#00d4a0]/20 bg-[#0b1713] p-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-[#789788]">Conquer / runtime local</p>
+            <h2 className="mt-1 text-sm font-semibold text-[#aaffdf]">Sistemas de juego</h2>
+            <ul className="mt-4 divide-y divide-[#00d4a0]/10 border-y border-[#00d4a0]/10 text-xs">
+              <li className="flex justify-between gap-3 py-3"><span className="text-[#83a999]">Director de crisis</span><strong className="text-[#c1ffe8]">LISTO</strong></li>
+              <li className="flex justify-between gap-3 py-3"><span className="text-[#83a999]">Deriva multiversal</span><strong className="text-[#c1ffe8]">ENLAZADA</strong></li>
+              <li className="flex justify-between gap-3 py-3"><span className="text-[#83a999]">Arena táctica</span><strong className="text-[#c1ffe8]">LOCAL</strong></li>
+            </ul>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => onNavigate('/arena')} className="min-h-11 border border-[#00d4a0]/40 px-3 py-2 text-[10px] font-bold text-[#aaffdf] transition hover:bg-[#00d4a0]/10">ABRIR ARENA</button>
+            <button type="button" onClick={() => onNavigate('/game')} className="min-h-11 border border-[#00d4a0]/40 px-3 py-2 text-[10px] font-bold text-[#aaffdf] transition hover:bg-[#00d4a0]/10">OPERACIONES</button>
           </div>
         </div>
 
@@ -475,7 +388,7 @@ export function MasterEngineDashboard() {
       </section>
 
       <footer className="border-t border-[#00d4a0]/15 pt-3 text-center text-[10px] text-[#789788]">
-        Soberanía de borde · Firma criptográfica EVOLIS · Procesamiento OCR local
+        Soberanía de borde · Firma criptográfica EVOLIS · Eventos de gameplay
       </footer>
     </main>
   );

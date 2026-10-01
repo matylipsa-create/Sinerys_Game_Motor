@@ -29,6 +29,7 @@ export function GameDashboard({ engine }: Props) {
   };
 
   const handleNewCrisis = () => {
+    if (!isResolved) engine.paradoxDirector.discardCrisis(currentCrisis.id);
     const randomSector = SECTORS[Math.floor(Math.random() * SECTORS.length)];
     setCurrentCrisis(engine.paradoxDirector.triggerSystemicCrisis(randomSector));
     setIsResolved(false);
