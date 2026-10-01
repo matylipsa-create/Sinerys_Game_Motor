@@ -6,6 +6,7 @@ import { VisionScreen } from './components/VisionScreen';
 import { VisionOnboarding } from './components/VisionOnboarding';
 import { GameDashboard } from './components/GameDashboard';
 import { ConquerHome } from './components/ConquerHome';
+import { SentraCoreArenaView } from './pwa/arena/SentraCoreArenaView';
 import BlindModeRoute from './components/BlindModeRoute';
 import { AppProvider } from './context/AppContext';
 import { GameEngineCore } from './core/GameEngineCore';
@@ -53,6 +54,10 @@ export default function App() {
     return <GameRoute onBack={() => navigate('/')} />;
   }
 
+  if (route === '/arena') {
+    return <SentraCoreArenaView onNavigate={navigate} />;
+  }
+
   if (route === '/blind') {
     return (
       <>
@@ -77,7 +82,7 @@ export default function App() {
             JUEGO
           </button>
           <button type="button" onClick={() => navigate('/')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
-            VOLVER A VISIÓN
+            VOLVER A CONQUER
           </button>
         </nav>
         <SentraCoreDashboard onOpenVisionDemo={() => navigate('/')} />

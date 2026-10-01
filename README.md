@@ -11,6 +11,7 @@ El refugio no sigue un guion. El mundo responde. Conquer of Darkness explora una
 La aplicacion web incluye una demo operativa de crisis estrategicas y paneles para explorar el motor:
 
 - `/game` — centro de operaciones: resuelve crisis y observa sus efectos sobre el refugio.
+- `/arena` — sala táctica PWA con tutorial de succión, mutágenos y Bash.
 - `/core` — dashboard de Sentra Core y su estado multiversal.
 - `/master-engine` — controles del motor maestro.
 - `/blind` y `/vision` — interfaces de asistencia y accesibilidad.

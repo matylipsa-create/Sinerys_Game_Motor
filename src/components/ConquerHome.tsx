@@ -18,7 +18,7 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
           <nav className="conquer-nav" aria-label="Navegación principal">
             <button type="button" className="conquer-nav-link" onClick={() => onNavigate('/core')}>EL MOTOR</button>
             <button type="button" className="conquer-nav-link" onClick={() => onNavigate('/blind')}>ACCESIBILIDAD</button>
-            <button type="button" className="conquer-nav-cta" onClick={() => onNavigate('/game')}>INICIAR PROTOCOLO <span aria-hidden="true">↗</span></button>
+            <button type="button" className="conquer-nav-cta" onClick={() => onNavigate('/arena')}>ENTRAR A LA ARENA <span aria-hidden="true">↗</span></button>
           </nav>
         </header>
 
@@ -29,8 +29,8 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
             <p className="conquer-intro">El refugio no sigue un guion. <strong>El mundo responde.</strong></p>
             <p className="conquer-description">Dirige una colonia al borde del colapso. Sentra Core Orchestrator convierte cada decisión en una nueva condición del mundo.</p>
             <div className="conquer-actions">
-              <button type="button" className="conquer-play" onClick={() => onNavigate('/game')}>
-                <span className="conquer-play-icon" aria-hidden="true">▶</span> JUGAR LA DEMO
+              <button type="button" className="conquer-play" onClick={() => onNavigate('/arena')}>
+                <span className="conquer-play-icon" aria-hidden="true">▶</span> INICIAR ARENA
               </button>
               <button type="button" className="conquer-engine-link" onClick={() => onNavigate('/core')}>
                 EXPLORAR SENTRA CORE <span aria-hidden="true">→</span>
@@ -77,9 +77,10 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
 
       <section className="conquer-access" aria-label="Entradas al proyecto">
         <div className="conquer-access-title"><p className="conquer-label">ELIGE TU PUNTO DE ENTRADA</p><h2>Un mundo.<br /><em>Varios sistemas.</em></h2></div>
-        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/game')}><span className="conquer-access-index">A</span><span><strong>Centro de operaciones</strong><small>Resuelve una crisis sistémica en la demo jugable.</small></span><b aria-hidden="true">↗</b></button>
-        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/core')}><span className="conquer-access-index">B</span><span><strong>Sentra Core</strong><small>Explora el orquestador y sus módulos adaptativos.</small></span><b aria-hidden="true">↗</b></button>
-        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/blind')}><span className="conquer-access-index">C</span><span><strong>Modo accesible</strong><small>Abre la interfaz de asistencia y navegación accesible.</small></span><b aria-hidden="true">↗</b></button>
+        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/arena')}><span className="conquer-access-index">A</span><span><strong>Sala de arena</strong><small>Entrena las mecánicas tácticas de Conquer.</small></span><b aria-hidden="true">↗</b></button>
+        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/game')}><span className="conquer-access-index">B</span><span><strong>Centro de operaciones</strong><small>Resuelve una crisis sistémica en la demo estratégica.</small></span><b aria-hidden="true">↗</b></button>
+        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/core')}><span className="conquer-access-index">C</span><span><strong>Sentra Core</strong><small>Explora el orquestador y sus módulos adaptativos.</small></span><b aria-hidden="true">↗</b></button>
+        <button type="button" className="conquer-access-row" onClick={() => onNavigate('/blind')}><span className="conquer-access-index">D</span><span><strong>Modo accesible</strong><small>Abre la interfaz de asistencia y navegación accesible.</small></span><b aria-hidden="true">↗</b></button>
       </section>
 
       <footer className="conquer-footer"><a className="conquer-footer-brand" href="/">CONQUER OF DARKNESS</a><span>UN PROYECTO DE SENTRA CORE</span><span>PROTOTIPO EN DESARROLLO · 2026</span></footer>
