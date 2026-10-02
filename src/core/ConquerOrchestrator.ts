@@ -1,5 +1,6 @@
 import type { EngineEvent } from './EngineCore.ts';
 import { EngineOrchestrator } from './EngineOrchestrator.ts';
+import type { PlayerIntent } from './game/PlayerIntent.ts';
 
 export { EngineOrchestrator } from './EngineOrchestrator.ts';
 export { TimeManager } from './TimeManager.ts';
@@ -47,6 +48,15 @@ export interface GameState {
   worldState: {
     location: WorldLocation;
     block: number;
+  };
+  arsState: {
+    lastIntent: PlayerIntent | null;
+    passiveTimeMs: number;
+    coreSkillUses: number;
+    itemUses: number;
+    itemAbuses: number;
+    combatActions: number;
+    tension: number;
   };
   eventState: EngineEvent[];
 }
@@ -115,6 +125,11 @@ function validateGameState(state: GameState): void {
   if (state.dungeonState.floors.length !== FLOOR_COUNT) {
     throw new Error('Dungeon state must contain exactly 15 floors.');
   }
+  if (!Number.isFinite(state.arsState.tension)
+    || state.arsState.tension < 0
+    || state.arsState.tension > 100) {
+    throw new Error('ARS tension must be between 0 and 100.');
+  }
   if (!Number.isFinite(state.playerState.health)
     || !Number.isFinite(state.playerState.maxHealth)
     || state.playerState.maxHealth <= 0
@@ -139,6 +154,15 @@ export class ConquerOrchestrator extends EngineOrchestrator<GameState> {
       partyState: { cooperative: false, playerIds: [] },
       lootState: [],
       worldState: { location: 'HUB', block: 1 },
+      arsState: {
+        lastIntent: null,
+        passiveTimeMs: 0,
+        coreSkillUses: 0,
+        itemUses: 0,
+        itemAbuses: 0,
+        combatActions: 0,
+        tension: 0,
+      },
       eventState: [],
     }, {
       validateState: validateGameState,

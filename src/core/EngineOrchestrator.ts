@@ -1,5 +1,6 @@
 import type {
   EngineEvent,
+  EngineStateChanged,
   IEngineContext,
   IEngineSystem,
   IMutationAction,
@@ -35,6 +36,8 @@ function cloneEvent<T>(event: EngineEvent<T>): EngineEvent<T> {
 
 export class EngineOrchestrator<TState extends object>
   implements IEngineContext<TState> {
+  private static engineSequence = 0;
+  readonly engineId = `engine-${++EngineOrchestrator.engineSequence}`;
   readonly time = new TimeManager();
   private state: TState;
   private revision = 0;
@@ -65,14 +68,27 @@ export class EngineOrchestrator<TState extends object>
     if (this.lifecycle === 'disposed') throw new Error('Engine has been disposed.');
     if (!action.type.trim()) throw new Error('Mutation action type must not be empty.');
 
-    const draft = clone(this.state);
+    const previousState = this.state;
+    const draft = clone(previousState);
     action.apply(draft);
     this.validate(draft);
     this.state = draft;
     this.revision += 1;
     const revision = this.revision;
     const snapshot = this.getState();
-    EventBus.emit('engine:mutation', { actionType: action.type, revision });
+    EventBus.emit('engine:mutation', {
+      engineId: this.engineId,
+      actionType: action.type,
+      revision,
+    });
+    const stateChange: EngineStateChanged<TState> = {
+      engineId: this.engineId,
+      actionType: action.type,
+      revision,
+      previousState: clone(previousState),
+      state: snapshot,
+    };
+    EventBus.emit(`engine:state:changed:${action.type}`, stateChange);
     return snapshot;
   }
 
@@ -163,7 +179,11 @@ export class EngineOrchestrator<TState extends object>
       throw error;
     }
     EventBus.emit(type, cloneEvent(event));
-    EventBus.emit('engine:event', { event: cloneEvent(event), revision: this.revision });
+    EventBus.emit('engine:event', {
+      engineId: this.engineId,
+      event: cloneEvent(event),
+      revision: this.revision,
+    });
     return cloneEvent(event);
   }
 

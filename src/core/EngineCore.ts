@@ -14,12 +14,21 @@ export interface EngineEvent<T = unknown> {
   sequence: number;
 }
 
+export interface EngineStateChanged<TState = unknown> {
+  engineId: string;
+  actionType: string;
+  revision: number;
+  previousState: TState;
+  state: TState;
+}
+
 export interface IMutationAction<TState> {
   readonly type: string;
   apply(draft: TState): void;
 }
 
 export interface IEngineContext<TState> {
+  readonly engineId: string;
   readonly time: ISimulationClock;
   getState(): TState;
   applyMutation(action: IMutationAction<TState>): TState;
