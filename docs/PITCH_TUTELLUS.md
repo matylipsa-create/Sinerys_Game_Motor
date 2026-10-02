@@ -45,7 +45,7 @@ Las soluciones existentes obligan a elegir entre capacidad y soberanía.
 
 ## Slide 4: Validación
 
-- **UMADESCA** (Unión Marplatense de Discapacidad Visual): Usuarios reales probando Sentra Visión — detección de objetos offline con descripción por voz.
+- **UMADESCA** (Unión Marplatense de Discapacidad Visual): Usuarios reales probando Sentra Percepción — detección de objetos offline con descripción por voz.
 - **Naty**: Usuario piloto de asistencia visual. Feedback en iteración activa.
 - **Código funcional**: Build de producción verificado. No es un mockup, es un motor que funciona.
 - **14 módulos de núcleo** operativos: MoralNode, EVOLIS, BioSoftware, PerceptionEngine, Guardian Bacteriano, y más.
@@ -57,10 +57,10 @@ Las soluciones existentes obligan a elegir entre capacidad y soberanía.
 **Producto paraguas**: Sentra Core (motor)
 
 **9 modos de operación**:
-Visión · Seguridad · Movimiento · Juego · Aprendizaje · Impacto · Silencio · Evidencia · Bio
+Percepción · Seguridad · Movimiento · Juego · Aprendizaje · Impacto · Silencio · Evidencia · Bio
 
 **Verticales**:
-- **Sentra Visión** — Asistencia visual para ciegos (UMADESCA)
+- **Sentra Percepción** — Asistencia visual para ciegos (UMADESCA)
 - **Sentinel** — Seguridad y monitoreo con Guardian Bacteriano
 - **EVOLIS** — Trazabilidad inalterable como producto standalone
 - **ZION** — Domótica soberana sin nube
@@ -114,7 +114,7 @@ Sentra Core ataca 3 mercados simultáneamente con un solo motor.
 
 ## Slide 9: Equipo
 
-**Fundador**: Desarrollador con visión técnica y estratégica. Mar del Plata, Argentina.
+**Fundador**: Desarrollador con percepción técnica y estratégica. Mar del Plata, Argentina.
 
 - Arquitectura completa diseñada e implementada (14 módulos, 9 modos, 6 verticales)
 - Validación con usuarios reales (UMADESCA)

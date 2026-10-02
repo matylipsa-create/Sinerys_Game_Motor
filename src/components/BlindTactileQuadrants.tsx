@@ -1,6 +1,6 @@
 /**
  * BlindTactileQuadrants
- * 4 zonas táctiles ciegas para control de Visión y Sentinel.
+ * 4 zonas táctiles ciegas para control de Percepción y Sentinel.
  * Sin botones visibles: solo áreas táctiles con ARIA labels descriptivos.
  */
 
@@ -15,7 +15,7 @@ interface BlindTactileQuadrantsProps {
 }
 
 const QUADRANT_LABELS: Record<Quadrant, string> = {
-  TOP_LEFT: 'Visión en vivo. Toque para iniciar o detener la cámara.',
+  TOP_LEFT: 'Percepción en vivo. Toque para iniciar o detener la cámara.',
   TOP_RIGHT: 'Descripción instantánea. Toque para describir lo que hay enfrente.',
   BOTTOM_LEFT: 'Estado del guardián perimetral. Toque para reporte de seguridad.',
   BOTTOM_RIGHT: 'Silenciar voz y audio. Mantenga pulsado para cancelar las alertas.',
@@ -111,7 +111,7 @@ export const BlindTactileQuadrants: React.FC<BlindTactileQuadrantsProps> = ({
     <div
       className={`blind-tactile-quadrants ${className}`}
       role="group"
-      aria-label="Controles táctiles de Visión y Sentinel"
+      aria-label="Controles táctiles de Percepción y Sentinel"
       aria-describedby="blind-quadrant-help"
     >
       <span id="blind-quadrant-help" className="blind-quadrant-visually-hidden">

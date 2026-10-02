@@ -1,6 +1,6 @@
 /**
- * Sentra Core Vision - Accessibility Bridge Module
- * Transforma eventos de visión táctica en salida de voz/háptica para TalkBack y NVDA.
+ * Sentra Core Orchestrator - Accessibility Bridge Module
+ * Transforma eventos de percepción táctica en salida de voz/háptica para TalkBack y NVDA.
  */
 
 export interface AccessibilityConfig {
@@ -8,7 +8,7 @@ export interface AccessibilityConfig {
   cooldownMs?: number;
 }
 
-export interface VisionDetection {
+export interface PerceptionDetection {
   label: string;
   distance?: number;
   clockPosition?: string;
@@ -19,7 +19,7 @@ export interface VoicePriorityPort {
   speakPriority(text: string, priority: 'critical' | 'normal' | 'low'): void;
 }
 
-class SentraVisionAccessibility {
+class SentraAccessibility {
   private minConfidence: number;
   private cooldownMs: number;
   private lastAnnounced: Map<string, number> = new Map();
@@ -38,7 +38,7 @@ class SentraVisionAccessibility {
     }
     if (typeof document !== 'undefined') {
       this.ariaAnnouncer = document.createElement('div');
-      this.ariaAnnouncer.setAttribute('id', 'sentra-vision-live-region');
+      this.ariaAnnouncer.setAttribute('id', 'sentra-perception-live-region');
       this.ariaAnnouncer.setAttribute('aria-live', 'assertive');
       this.ariaAnnouncer.setAttribute('aria-atomic', 'true');
       this.ariaAnnouncer.style.cssText =
@@ -47,7 +47,7 @@ class SentraVisionAccessibility {
     }
   }
 
-  processDetections(detections: VisionDetection[]): void {
+  processDetections(detections: PerceptionDetection[]): void {
     const now = Date.now();
     for (const item of detections) {
       if (item.confidence < this.minConfidence) continue;
@@ -62,7 +62,7 @@ class SentraVisionAccessibility {
     }
   }
 
-  private formatSpatialMessage(item: VisionDetection): string {
+  private formatSpatialMessage(item: PerceptionDetection): string {
     let msg = item.label;
     if (item.clockPosition) msg += ` a las ${item.clockPosition}`;
     if (item.distance !== undefined) msg += `, a ${item.distance} metros`;
@@ -109,4 +109,4 @@ class SentraVisionAccessibility {
   }
 }
 
-export default SentraVisionAccessibility;
+export default SentraAccessibility;

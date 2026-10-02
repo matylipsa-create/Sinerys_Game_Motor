@@ -11,7 +11,7 @@ import { geminiService } from '../core/GeminiService';
 import { type TCREIResponse } from '../core/TCREIBridge';
 
 export type AISource = 'ollama' | 'gemini' | 'local-fallback';
-export type AITask = 'vision' | 'bio' | 'security' | 'learning' | 'general';
+export type AITask = 'perception' | 'bio' | 'security' | 'learning' | 'general';
 
 export interface LocalAIRequest {
   prompt: string;
@@ -42,7 +42,7 @@ type LocalAIListener = (status: LocalAIStatus) => void;
 const DEFAULT_SYSTEM_PROMPT = 'Eres Sentra Core, un asistente soberano y offline-first. Respondes en español, de forma clara y concisa.';
 
 const TASK_MODEL_MAP: Record<AITask, string> = {
-  vision: 'llama3:8b',
+  perception: 'llama3:8b',
   bio: 'qwen2.5:7b',
   security: 'llama3:8b',
   learning: 'qwen2.5:7b',

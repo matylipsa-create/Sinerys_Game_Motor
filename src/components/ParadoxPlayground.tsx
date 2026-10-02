@@ -67,8 +67,8 @@ export function ParadoxPlayground() {
   };
 
   const handleMantis = () => {
-    const active = globalOrchestrator.toggleMantisVision();
-    refresh(`MANTIS VISION // ${active ? 'ENGAGED' : 'DISENGAGED'}`);
+    const active = globalOrchestrator.toggleMantisFilters();
+    refresh(`MANTIS PERCEPTION // ${active ? 'ENGAGED' : 'DISENGAGED'}`);
   };
 
   const handleFaction = () => {
@@ -87,7 +87,7 @@ export function ParadoxPlayground() {
   };
 
   return (
-    <main className={`paradox-shell${gameState.mantisVisionActive ? ' mantis-active' : ''}`}>
+    <main className={`paradox-shell${gameState.mantisFiltersActive ? ' mantis-active' : ''}`}>
       <header className="paradox-header">
         <div>
           <p className="paradox-kicker">CONQUER OF DARKNESS / FIELD SYSTEMS</p>
@@ -109,7 +109,7 @@ export function ParadoxPlayground() {
           <article><span className="paradox-label">MOB SCORE</span><strong>{gameState.mobScore.toLocaleString()}</strong><small>FIELD CURRENCY</small></article>
           <article><span className="paradox-label">LIVING AMMO</span><strong>{String(gameState.livingAmmoCount).padStart(2, '0')}</strong><small>ROUNDS AVAILABLE</small></article>
           <article><span className="paradox-label">MUTAGENS</span><strong>{String(gameState.mutagensOwned.length).padStart(2, '0')}</strong><small>{gameState.mutagensOwned[gameState.mutagensOwned.length - 1]?.replace(/_/g, ' ')}</small></article>
-          <article><span className="paradox-label">CAMERA</span><strong className="camera-value">{gameState.activeCameraMode.replace(/_/g, ' ')}</strong><small>MANTIS {gameState.mantisVisionActive ? 'ACTIVE' : 'STANDBY'}</small></article>
+          <article><span className="paradox-label">CAMERA</span><strong className="camera-value">{gameState.activeCameraMode.replace(/_/g, ' ')}</strong><small>MANTIS {gameState.mantisFiltersActive ? 'ACTIVE' : 'STANDBY'}</small></article>
         </div>
       </section>
 
@@ -122,7 +122,7 @@ export function ParadoxPlayground() {
             <button type="button" onClick={handleAmmo}><span className="action-index">03</span><span>Acquire living ammo<small>300 SCORE / +10 ROUNDS</small></span><b>−</b></button>
             <button type="button" onClick={handleMutagen} disabled={gameState.mutagensOwned.includes(MUTAGEN_ID)}><span className="action-index">04</span><span>Acquire mutagen<small>{gameState.mutagensOwned.includes(MUTAGEN_ID) ? 'ALREADY OWNED' : `MYCELIUM SYNTH / ${MUTAGEN_COST} SCORE`}</small></span><b>{gameState.mutagensOwned.includes(MUTAGEN_ID) ? 'OK' : '-'}</b></button>
             <button type="button" onClick={handleCamera}><span className="action-index">05</span><span>Change camera mode<small>CYCLE PERSPECTIVE</small></span><b>R</b></button>
-            <button type="button" onClick={handleMantis} aria-pressed={gameState.mantisVisionActive}><span className="action-index">06</span><span>Mantis vision<small>{gameState.mantisVisionActive ? 'SPECTRAL FILTER ENGAGED' : 'SPECTRAL FILTER STANDBY'}</small></span><b>{gameState.mantisVisionActive ? 'ON' : 'OFF'}</b></button>
+            <button type="button" onClick={handleMantis} aria-pressed={gameState.mantisFiltersActive}><span className="action-index">06</span><span>Mantis perception<small>{gameState.mantisFiltersActive ? 'SPECTRAL FILTER ENGAGED' : 'SPECTRAL FILTER STANDBY'}</small></span><b>{gameState.mantisFiltersActive ? 'ON' : 'OFF'}</b></button>
           </div>
         </section>
 

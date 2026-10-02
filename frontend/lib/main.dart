@@ -12,35 +12,35 @@ void main() {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const SentraVisionApp());
+  runApp(const SentraPerceptionApp());
 }
 
-class SentraVisionApp extends StatelessWidget {
-  const SentraVisionApp({super.key});
+class SentraPerceptionApp extends StatelessWidget {
+  const SentraPerceptionApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sentra Visión',
+      title: 'Sentra Percepción',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
         primaryColor: const Color(0xFF00FFCC),
       ),
-      home: const SentraVisionWebView(),
+      home: const SentraPerceptionWebView(),
     );
   }
 }
 
-class SentraVisionWebView extends StatefulWidget {
-  const SentraVisionWebView({super.key});
+class SentraPerceptionWebView extends StatefulWidget {
+  const SentraPerceptionWebView({super.key});
 
   @override
-  State<SentraVisionWebView> createState() => _SentraVisionWebViewState();
+  State<SentraPerceptionWebView> createState() => _SentraPerceptionWebViewState();
 }
 
-class _SentraVisionWebViewState extends State<SentraVisionWebView> {
+class _SentraPerceptionWebViewState extends State<SentraPerceptionWebView> {
   late final WebViewController _controller;
   bool _isLoading = true;
   bool _hasError = false;
@@ -79,7 +79,7 @@ class _SentraVisionWebViewState extends State<SentraVisionWebView> {
             });
             _controller.runJavaScript('''
               if (typeof window !== "undefined" && "speechSynthesis" in window) {
-                const u = new SpeechSynthesisUtterance("Sentra Visión lista. Toque el botón para activar.");
+                const u = new SpeechSynthesisUtterance("Sentra Percepción lista. Toque el botón para activar.");
                 u.lang = "es-AR";
                 u.rate = 1.5;
                 window.speechSynthesis.speak(u);
@@ -116,7 +116,7 @@ class _SentraVisionWebViewState extends State<SentraVisionWebView> {
             if (_isLoading)
               Center(
                 child: Semantics(
-                  label: 'Cargando Sentra Visión',
+                  label: 'Cargando Sentra Percepción',
                   liveRegion: true,
                   child: const CircularProgressIndicator(
                     color: Color(0xFF00FFCC),

@@ -23,8 +23,8 @@ Sentra Core es un motor paraguas de decisión ética. No es una app. No es una v
 - `TernaryMath` — Aritmética ternaria
 
 ### Capa 2 — Puente Sensorial
-- `PerceptionEngine` — Visión, audio, IMU, GPS
-- `SentraVisionAccessibility` — ARIA + TTS + háptico
+- `PerceptionEngine` — Percepción, audio, IMU, GPS
+- `SentraAccessibility` — ARIA + TTS + háptico
 - `SpatialAudioEngine` — Audio 3D binaural
 - `AdaptiveUIMode` — 3 modos (smooth/analytical/silent)
 - `CognitiveLoadManager` — Carga cognitiva
@@ -71,7 +71,7 @@ Sentra Core es un motor paraguas de decisión ética. No es una app. No es una v
 
 | Vertical | Estado |
 |---|---|
-| Sentra Vision (accesibilidad) | ✅ PWA funcional |
+| Sentra Perception (accesibilidad) | ✅ PWA funcional |
 | Sentinel (ciberseguridad) | ⏳ Roadmap |
 | ZION (gaming) | ⏳ Roadmap |
 | ZION Home (domótica) | ⏳ Roadmap |

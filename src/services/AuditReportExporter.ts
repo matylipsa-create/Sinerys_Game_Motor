@@ -10,7 +10,7 @@ function escapeCsv(value: unknown): string {
 export async function downloadAuditReport(format: AuditFormat): Promise<number> {
   const entries = await storageService.getAllEvidence();
   const perceptionEntries = entries.filter(({ module, action }) => (
-    /vision|perception|master/i.test(module) || /detection|ocr|perception/i.test(action)
+    /perception|perception|master/i.test(module) || /detection|ocr|perception/i.test(action)
   ));
   const report = {
     formatVersion: 1,

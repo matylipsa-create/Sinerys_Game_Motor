@@ -12,7 +12,7 @@ import {
   type SensorCategory,
   type AmbientReading,
   type MotionReading,
-  type VisionReading,
+  type PerceptionReading,
   type AudioReading,
   type ContactReading,
   type GasReading,
@@ -39,7 +39,7 @@ export interface PerceptionEvent {
 export type PerceptionListener = (event: PerceptionEvent) => void;
 
 export interface PerceptionData {
-  visionDetections?: Array<{ class: string; score: number; bbox: [number, number, number, number] }>;
+  perceptionDetections?: Array<{ class: string; score: number; bbox: [number, number, number, number] }>;
   imageWidth?: number;
   imageHeight?: number;
   summary?: string;
@@ -67,7 +67,7 @@ export interface PerceptionThresholds {
     gyroMax: number;
     magnitudeMax: number;
   };
-  vision: {
+  perception: {
     maxObjects: number;
     motionDetected: boolean;
   };
@@ -100,7 +100,7 @@ export interface PerceptionThresholds {
 const DEFAULT_THRESHOLDS: PerceptionThresholds = {
   ambient: { tempMin: 10, tempMax: 35, humidityMin: 20, humidityMax: 80, lightMax: 10000 },
   motion: { accelMax: 2.5, gyroMax: 500, magnitudeMax: 3 },
-  vision: { maxObjects: 10, motionDetected: true },
+  perception: { maxObjects: 10, motionDetected: true },
   audio: { splMax: 85, silenceThreshold: 30 },
   contact: { tamperAlert: true },
   gas: { co2Max: 1000, vocMax: 0.3, coMax: 9, methaneMax: 50, aqiMax: 150 },
@@ -154,7 +154,7 @@ export class PerceptionEngine {
   }
 
   summarize(data: PerceptionData): string {
-    const detections = data.visionDetections ?? [];
+    const detections = data.perceptionDetections ?? [];
     if (detections.length === 0) return data.summary ?? 'Sin objetos detectados';
     return `Objetos detectados: ${detections.map((d) => `${d.class} (${Math.round(d.score * 100)}%)`).join(', ')}`;
   }
@@ -194,8 +194,8 @@ export class PerceptionEngine {
       case "motion":
         this.processMotion(reading, reading.value as MotionReading);
         break;
-      case "vision":
-        this.processVision(reading, reading.value as VisionReading);
+      case "perception":
+        this.processPerception(reading, reading.value as PerceptionReading);
         break;
       case "audio":
         this.processAudio(reading, reading.value as AudioReading);
@@ -289,11 +289,11 @@ export class PerceptionEngine {
     }
   }
 
-  private processVision(r: SensorReading, v: VisionReading): void {
-    const t = this.thresholds.vision;
+  private processPerception(r: SensorReading, v: PerceptionReading): void {
+    const t = this.thresholds.perception;
     if (v.objectsDetected > t.maxObjects) {
       this.emit({
-        category: "vision",
+        category: "perception",
         sensorId: r.sensorId,
         level: "warning",
         message: `Muchos objetos detectados: ${v.objectsDetected}`,
@@ -302,7 +302,7 @@ export class PerceptionEngine {
     }
     if (v.motionDetected && t.motionDetected) {
       this.emit({
-        category: "vision",
+        category: "perception",
         sensorId: r.sensorId,
         level: "info",
         message: `Movimiento visual detectado`,

@@ -34,7 +34,7 @@ class ModuleDef {
 
 /// Modulos predefinidos (fallback cuando el backend no responde).
 const List<ModuleDef> defaultModules = [
-  ModuleDef(id: 'vision', label: 'Vision', description: 'Camara + COCO-SSD + descripcion por voz', icon: '\u{1F441}', requiresCamera: true),
+  ModuleDef(id: 'perception', label: 'Perception', description: 'Camara + COCO-SSD + descripcion por voz', icon: '\u{1F441}', requiresCamera: true),
   ModuleDef(id: 'seguridad', label: 'Seguridad', description: 'Sensores + alertas + EVOLIS + monitoreo', icon: '\u{1F6E1}', requiresSensors: true),
   ModuleDef(id: 'movimiento', label: 'Movimiento', description: 'GPS + IMU + orientacion + vibracion guia', icon: '\u{1F9ED}', requiresGPS: true, requiresSensors: true),
   ModuleDef(id: 'aprendizaje', label: 'Aprendizaje', description: 'GeminiService + preguntas + respuestas', icon: '\u{1F4DA}'),

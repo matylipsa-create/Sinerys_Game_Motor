@@ -1,6 +1,6 @@
 # Arquitectura de Interfaz Multimodal — Sentra Core
 
-## Visión general
+## Percepción general
 
 La interfaz para personas ciegas **no es una pantalla**: es un **bus de eventos táctil y auditivo**. La pantalla queda como capa secundaria para videntes y configuración.
 
@@ -9,7 +9,7 @@ La interfaz para personas ciegas **no es una pantalla**: es un **bus de eventos 
 | Nivel | Nombre | Canal | Regla |
 |---|---|---|---|
 | 1 | CRITICAL (Sentinel / BacterialGuardian) | Háptico pesado + TTS prioritario | Interrumpe todo |
-| 2 | NAVIGATION (Visión / COCO-SSD) | Audio 3D binaural + beeps | Bloqueado si Nivel 1 activo |
+| 2 | NAVIGATION (Percepción / COCO-SSD) | Audio 3D binaural + beeps | Bloqueado si Nivel 1 activo |
 | 3 | DESCRIPTIVE (descripción a demanda) | TTS alta velocidad | Solo por gesto explícito |
 
 ## Integración con arquitectura existente
@@ -22,7 +22,7 @@ La interfaz para personas ciegas **no es una pantalla**: es un **bus de eventos 
 | `VoiceManager.ts` | `speakPriority(text, priority)` — extiende TTS existente |
 | `DeviceManager.ts` | `vibratePattern(name)` — extiende vibración existente |
 | `CognitiveLoadManager.ts` | Tracking de carga por prioridad |
-| `SentraVisionAccessibility.ts` | Delega `announcePriority()` a `VoiceManager` |
+| `SentraAccessibility.ts` | Delega `announcePriority()` a `VoiceManager` |
 
 ## Componentes nuevos (esta capa)
 

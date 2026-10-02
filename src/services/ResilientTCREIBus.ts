@@ -98,7 +98,7 @@ export class ResilientTCREIBus {
   async enqueue(action: 'telemetry' | 'operator_action', payload: Record<string, unknown>): Promise<void> {
     const message: TCREICommand = {
       type: 'command',
-      module: action === 'telemetry' ? 'vision' : 'system',
+      module: action === 'telemetry' ? 'perception' : 'system',
       action,
       payload,
       timestamp: Date.now(),

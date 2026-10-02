@@ -5,7 +5,7 @@ import { makeAck, makeAuthResult, makeEvent, parseMessage } from '../tcrei-proto
 test('TCREI parser accepts telemetry frames with optional signatures', () => {
   const frame = {
     type: 'telemetry',
-    module: 'vision',
+    module: 'perception',
     action: 'telemetry',
     payload: { signals: [] },
     timestamp: Date.now(),

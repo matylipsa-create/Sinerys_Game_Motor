@@ -9,13 +9,13 @@ export interface PowerProfile {
   label: string;
   description: string;
   sensorIntervalMs: number;
-  visionIntervalMs: number;
-  enableVision: boolean;
+  perceptionIntervalMs: number;
+  enablePerception: boolean;
   enableGPS: boolean;
   enableIMU: boolean;
   enableAudio: boolean;
   enableBackgroundSync: boolean;
-  visionModel: 'lite_mobilenet_v2' | 'mobilenet_v2' | 'none';
+  perceptionModel: 'lite_mobilenet_v2' | 'mobilenet_v2' | 'none';
   maxFps: number;
 }
 
@@ -23,15 +23,15 @@ const PROFILES: Record<PowerMode, PowerProfile> = {
   ultra_ahorro: {
     mode: 'ultra_ahorro',
     label: 'Ultra Ahorro',
-    description: 'Minimo consumo: solo sensores esenciales, sin vision ni audio',
+    description: 'Minimo consumo: solo sensores esenciales, sin perception ni audio',
     sensorIntervalMs: 10000,
-    visionIntervalMs: 0,
-    enableVision: false,
+    perceptionIntervalMs: 0,
+    enablePerception: false,
     enableGPS: false,
     enableIMU: true,
     enableAudio: false,
     enableBackgroundSync: false,
-    visionModel: 'none',
+    perceptionModel: 'none',
     maxFps: 5,
   },
   normal: {
@@ -39,13 +39,13 @@ const PROFILES: Record<PowerMode, PowerProfile> = {
     label: 'Normal',
     description: 'Balance entre funcionalidad y consumo energetico',
     sensorIntervalMs: 3000,
-    visionIntervalMs: 5000,
-    enableVision: true,
+    perceptionIntervalMs: 5000,
+    enablePerception: true,
     enableGPS: true,
     enableIMU: true,
     enableAudio: true,
     enableBackgroundSync: true,
-    visionModel: 'lite_mobilenet_v2',
+    perceptionModel: 'lite_mobilenet_v2',
     maxFps: 15,
   },
   alto_rendimiento: {
@@ -53,13 +53,13 @@ const PROFILES: Record<PowerMode, PowerProfile> = {
     label: 'Alto Rendimiento',
     description: 'Maxima capacidad: todos los sensores a maxima frecuencia',
     sensorIntervalMs: 500,
-    visionIntervalMs: 1000,
-    enableVision: true,
+    perceptionIntervalMs: 1000,
+    enablePerception: true,
     enableGPS: true,
     enableIMU: true,
     enableAudio: true,
     enableBackgroundSync: true,
-    visionModel: 'mobilenet_v2',
+    perceptionModel: 'mobilenet_v2',
     maxFps: 30,
   },
 };

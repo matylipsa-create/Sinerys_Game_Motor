@@ -6,7 +6,7 @@
 
 ---
 
-## Visión General
+## Percepción General
 
 La arquitectura de IA Cuantizada integra modelos de lenguaje de 7B/8B parámetros
 ejecutándose **localmente** mediante **Ollama** (API compatible OpenAI), con
@@ -48,7 +48,7 @@ en `docs/LORA_PROTOCOL_ARCHITECTURE.md`.
 │              Ollama (runtime local)                       │
 │                                                          │
 │  Modelos cuantizados:                                    │
-│    Llama 3 8B  (Q4_K_M) — visión, seguridad              │
+│    Llama 3 8B  (Q4_K_M) — percepción, seguridad              │
 │    Qwen 2.5 7B (Q4_K_M) — bio, aprendizaje                │
 │    Gemma 3      (Q4_K_M) — general                        │
 │                                                          │
@@ -139,7 +139,7 @@ los nodos de OpenAI externos de n8n.
 
 | Modelo | Parámetros | Tarea | VRAM (4-bit) |
 |--------|-----------|-------|-------------|
-| **Llama 3 8B** | 8B | Visión, Seguridad | 4-6 GB |
+| **Llama 3 8B** | 8B | Percepción, Seguridad | 4-6 GB |
 | **Qwen 2.5 7B** | 7B | Bio, Aprendizaje | 4-6 GB |
 | **Gemma 3** | 4B | General | 3-4 GB |
 
@@ -147,7 +147,7 @@ los nodos de OpenAI externos de n8n.
 
 `ModelManager` selecciona automáticamente el modelo óptimo:
 
-- **Visión** → Llama 3 8B (mejor descripción de escenas)
+- **Percepción** → Llama 3 8B (mejor descripción de escenas)
 - **Bio** → Qwen 2.5 7B (mejor reencuadre cognitivo)
 - **Seguridad** → Llama 3 8B Q4_K_M (mejor alertas)
 - **Aprendizaje** → Qwen 2.5 7B Q4_K_M (mejor respuestas educativas)
@@ -227,7 +227,7 @@ Antes de enviar cualquier prompt a Ollama, el `MoralNode` evalúa el comando:
 - `docs/ZERO_LATENCY_ARCHITECTURE.md` — Arquitectura de latencia cero (Capa 0 / Capa 1)
 - `docs/LORA_PROTOCOL_ARCHITECTURE.md` — Protocolo P2P LoRa (SX1262)
 - `src/core/GeminiService.ts` — Servicio de IA con fallback local (ya existente)
-- `src/modules/SentraVisionAccessibility.ts` — Puente de accesibilidad (TalkBack, NVDA)
+- `src/modules/SentraAccessibility.ts` — Puente de accesibilidad (TalkBack, NVDA)
 
 ---
 

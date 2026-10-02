@@ -1,12 +1,12 @@
 /**
  * SentraGuardianHub — Hub central del Motor de Contexto y Prioridad Operativa.
  *
- * Unifica Visión y Sentinel con 3 niveles jerárquicos:
- *   CRÍTICO (Sentinel) > NAVEGACIÓN (Visión) > DESCRIPTIVO (TTS a demanda)
+ * Unifica Percepción y Sentinel con 3 niveles jerárquicos:
+ *   CRÍTICO (Sentinel) > NAVEGACIÓN (Percepción) > DESCRIPTIVO (TTS a demanda)
  *
- * Sentinel interrumpe Visión de forma determinista con cooldown de 5s.
+ * Sentinel interrumpe Percepción de forma determinista con cooldown de 5s.
  * Audio 3D binaural real vía SpatialAudioEngine. Haptics vía DeviceManager.
- * TTS unificado vía SentraVisionAccessibility.announcePriority.
+ * TTS unificado vía SentraAccessibility.announcePriority.
  * Prioridad delegada a ContextGovernor (sin estado duplicado).
  */
 
@@ -19,9 +19,9 @@ import { contextGovernor } from './ContextGovernor';
 import { bacterialGuardian } from './BacterialGuardian';
 import { eventRouter } from './EventRouter';
 import { voiceManager } from '../services/VoiceManager';
-import SentraVisionAccessibility from '../modules/SentraVisionAccessibility';
+import SentraAccessibility from '../modules/SentraAccessibility';
 
-export interface VisionDetectionInput {
+export interface PerceptionDetectionInput {
   label: string;
   confidence: number;
   panX?: number;
@@ -38,7 +38,7 @@ export interface HubState {
   sentinelAlertActive: boolean;
   currentPriorityLevel: PriorityLevel;
   lastSentinelEvent: SentinelEventInput | null;
-  lastVisionDetection: VisionDetectionInput | null;
+  lastPerceptionDetection: PerceptionDetectionInput | null;
   spatialAudioEnabled: boolean;
 }
 
@@ -110,21 +110,21 @@ function safeCancelSpeech(): void {
 class SentraGuardianHub {
   private sentinelAlertActive = false;
   private lastSentinelEvent: SentinelEventInput | null = null;
-  private lastVisionDetection: VisionDetectionInput | null = null;
+  private lastPerceptionDetection: PerceptionDetectionInput | null = null;
   private spatialAudioEnabled = true;
   private listeners = new Set<HubListener>();
   private sentinelReleaseTimer: number | null = null;
   private quadrantTapHandlers = new Map<Quadrant, QuadrantHandler>();
   private quadrantLongPressHandlers = new Map<Quadrant, QuadrantHandler>();
   private _multimodalInitialized = false;
-  private accessibility = new SentraVisionAccessibility({ minConfidence: 0.5 });
+  private accessibility = new SentraAccessibility({ minConfidence: 0.5 });
 
   getState(): HubState {
     return {
       sentinelAlertActive: this.sentinelAlertActive,
       currentPriorityLevel: fromGovernorLevel(contextGovernor.getPriorityLevel()),
       lastSentinelEvent: this.lastSentinelEvent,
-      lastVisionDetection: this.lastVisionDetection,
+      lastPerceptionDetection: this.lastPerceptionDetection,
       spatialAudioEnabled: this.spatialAudioEnabled,
     };
   }
@@ -161,7 +161,7 @@ class SentraGuardianHub {
       this.accessibility.setVoiceManager(voiceManager);
 
       if (typeof window !== 'undefined') {
-        (window as unknown as { __sentraAccessibility?: SentraVisionAccessibility }).__sentraAccessibility =
+        (window as unknown as { __sentraAccessibility?: SentraAccessibility }).__sentraAccessibility =
           this.accessibility;
       }
 
@@ -172,16 +172,16 @@ class SentraGuardianHub {
     }
   }
 
-  onVisionDetection(detection: VisionDetectionInput): void {
+  onPerceptionDetection(detection: PerceptionDetectionInput): void {
     // FIX BUG 1+2: consultar governor, no solo estado interno.
     // Si el governor está en CRITICAL (por Sentinel, BacterialGuardian, etc.),
-    // bloquear visión sin importar quién lo puso.
+    // bloquear percepción sin importar quién lo puso.
     if (this.sentinelAlertActive || contextGovernor.isCriticalActive()) {
-      safeEvolisRecord('guardian_hub', 'vision_blocked_by_sentinel', detection.label);
+      safeEvolisRecord('guardian_hub', 'perception_blocked_by_sentinel', detection.label);
       return;
     }
 
-    this.lastVisionDetection = detection;
+    this.lastPerceptionDetection = detection;
 
     // FIX BUG 2: solo poner NAVIGATION si el governor no está ya en un nivel superior.
     // No pisar CRITICAL.
@@ -193,7 +193,7 @@ class SentraGuardianHub {
     try {
       priorityQueue.enqueue({
         level: 'navigation',
-        type: 'vision_detection',
+        type: 'perception_detection',
         message: detection.label,
         data: {
           confidence: detection.confidence,

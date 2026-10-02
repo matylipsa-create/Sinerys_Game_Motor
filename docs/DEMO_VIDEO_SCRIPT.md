@@ -15,15 +15,15 @@
 
 ---
 
-## Escena 2: Sentra Visión — Detección de objetos con voz (0:15-0:50)
+## Escena 2: Sentra Percepción — Detección de objetos con voz (0:15-0:50)
 
-**Visual**: Pantalla de la app en modo Visión. Cámara en vivo apuntando a una mesa con objetos (laptop, taza, persona). Bounding boxes aparecen sobre los objetos. Se escucha la voz del agente describiendo la escena.
+**Visual**: Pantalla de la app en modo Percepción. Cámara en vivo apuntando a una mesa con objetos (laptop, taza, persona). Bounding boxes aparecen sobre los objetos. Se escucha la voz del agente describiendo la escena.
 
 **Voz del agente (TTS)**:
 "Veo una persona. Detecto: laptop, taza, persona. Modo offline activo."
 
 **Voz en off**:
-"Sentra Visión detecta objetos en tiempo real, completamente offline. Diseñado para personas ciegas o con baja visión. Validado con usuarios reales de UMADESCA."
+"Sentra Percepción detecta objetos en tiempo real, completamente offline. Diseñado para personas ciegas o con baja percepción. Validado con usuarios reales de UMADESCA."
 
 **Detalle a mostrar**:
 - Bounding boxes cyan (persona) y verde (objetos)

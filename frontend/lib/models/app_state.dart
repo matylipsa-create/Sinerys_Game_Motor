@@ -20,7 +20,7 @@ class AppStateData {
   final bool connected;
 
   const AppStateData({
-    this.activeModule = 'vision',
+    this.activeModule = 'perception',
     this.voiceEnabled = true,
     this.humanVeto = false,
     this.powerMode = 'normal',

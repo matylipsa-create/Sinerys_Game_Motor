@@ -1,7 +1,7 @@
 export type TCREIMessageType = 'command' | 'query' | 'event' | 'response' | 'error';
 
 export type TCREIModule =
-  | 'vision' | 'seguridad' | 'movimiento' | 'juego'
+  | 'perception' | 'seguridad' | 'movimiento' | 'juego'
   | 'aprendizaje' | 'impacto' | 'silencio' | 'evidencia' | 'bio' | 'guardian';
 
 export type TCREIAction =

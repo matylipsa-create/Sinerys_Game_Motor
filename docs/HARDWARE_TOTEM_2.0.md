@@ -6,7 +6,7 @@
 
 ---
 
-## Visión General
+## Percepción General
 
 El Tótem 2.0 es el hardware de referencia para ejecutar Sentra Core en entornos sin internet garantizado. Combina un nodo central de procesamiento con nodos de percepción distribuidos, comunicándose por LoRa, Bluetooth Mesh y Syncthing.
 
@@ -77,7 +77,7 @@ El Tótem 2.0 es el hardware de referencia para ejecutar Sentra Core en entornos
 | Componente | Detalle |
 |------------|---------|
 | **MCU** | ESP32 (dual-core, 240MHz, WiFi + BT) |
-| **Variante** | ESP32-CAM (con cámara OV2640) para visión |
+| **Variante** | ESP32-CAM (con cámara OV2640) para percepción |
 | **Sensores** | DHT22 (temp/humedad), BH1750 (luz), PIR (movimiento), STF |
 | **Comunicación** | LoRa (SX1276), Bluetooth Mesh, WiFi |
 | **Energía** | Batería LiPo 18650 + carga solar opcional |
@@ -90,7 +90,7 @@ El Tótem 2.0 es el hardware de referencia para ejecutar Sentra Core en entornos
 | **DHT22** | Temperatura y humedad ambiente | Seguridad, Impacto |
 | **BH1750** | Luz ambiental | Seguridad, Silencio |
 | **PIR** | Detección de movimiento | Seguridad |
-| **ESP32-CAM** | Cámara para visión por computadora | Visión |
+| **ESP32-CAM** | Cámara para percepción por computadora | Percepción |
 | **MPU6050** | IMU (acelerómetro + giroscopio) | Movimiento |
 | **STF** | Skin Temperature Flux | Impacto, Bio |
 | **NEO-6M** | GPS | Movimiento |
@@ -135,7 +135,7 @@ El Tótem 2.0 es el hardware de referencia para ejecutar Sentra Core en entornos
 
 Sentra Core ajusta automáticamente el consumo:
 
-- **Ultra Ahorro**: Solo sensores esenciales, sin visión ni audio. Intervalo 10s.
+- **Ultra Ahorro**: Solo sensores esenciales, sin percepción ni audio. Intervalo 10s.
 - **Normal**: Balance entre funcionalidad y consumo. Intervalo 3-5s.
 - **Alto Rendimiento**: Todos los sensores a máxima frecuencia. Intervalo 0.5-1s.
 

@@ -30,7 +30,7 @@ const LOCAL_KNOWLEDGE: { keywords: string[]; response: string }[] = [
   },
   {
     keywords: ['persona', 'gente', 'alguien', 'cuerpo'],
-    response: 'Detecto presencia de personas en el campo de vision.',
+    response: 'Detecto presencia de personas en el campo de perception.',
   },
   {
     keywords: ['peligro', 'riesgo', 'alerta', 'emergencia'],

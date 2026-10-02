@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { HotPlugRegistry } from '../src/core/HotPlugRegistry.js';
 import { bacterialGuardian } from '../src/core/BacterialGuardian.js';
 
-type ServerPluginId = 'vision' | 'telemetry' | 'security';
+type ServerPluginId = 'perception' | 'telemetry' | 'security';
 
 const serverPluginDefinitions = new Map<ServerPluginId, {
   id: ServerPluginId;
@@ -10,7 +10,7 @@ const serverPluginDefinitions = new Map<ServerPluginId, {
   activate: () => void;
   deactivate: () => void;
 }>([
-  ['vision', { id: 'vision', version: '1.0.0', activate() {}, deactivate() {} }],
+  ['perception', { id: 'perception', version: '1.0.0', activate() {}, deactivate() {} }],
   ['telemetry', { id: 'telemetry', version: '1.0.0', activate() {}, deactivate() {} }],
   ['security', {
     id: 'security',

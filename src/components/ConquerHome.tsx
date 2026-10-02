@@ -79,6 +79,7 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/arena')}><span className="conquer-access-index">A</span><span><strong>Sala de arena</strong><small>Entrena las mecánicas tácticas de Conquer.</small></span><b aria-hidden="true">↗</b></button>
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/game')}><span className="conquer-access-index">B</span><span><strong>Centro de operaciones</strong><small>Resuelve una crisis sistémica en la demo estratégica.</small></span><b aria-hidden="true">↗</b></button>
         <button type="button" className="conquer-access-row" onClick={() => onNavigate('/core')}><span className="conquer-access-index">C</span><span><strong>Sentra Core</strong><small>Explora el orquestador y sus módulos adaptativos.</small></span><b aria-hidden="true">↗</b></button>
+      <button type="button" className="conquer-access-row" onClick={() => onNavigate('/paradox')}><span className="conquer-access-index">D</span><span><strong>Paradox Orchestrator</strong><small>Administra recursos, refugio, mutaciones y crisis.</small></span><b aria-hidden="true">↗</b></button>
       </section>
 
       <footer className="conquer-footer"><a className="conquer-footer-brand" href="/">CONQUER OF DARKNESS</a><span>UN PROYECTO DE SENTRA CORE</span><span>PROTOTIPO EN DESARROLLO · 2026</span></footer>

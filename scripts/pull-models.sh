@@ -2,7 +2,7 @@
 # pull-models.sh — Descarga modelos IA cuantizados para Ollama
 #
 # Descarga modelos optimizados para Sentra Core v4.9.0_QUANTIZED_AI:
-#   - Llama 3 8B (4-bit Q4_K_M) — visión, seguridad
+#   - Llama 3 8B (4-bit Q4_K_M) — percepción, seguridad
 #   - Qwen 2.5 7B (4-bit Q4_K_M) — bio, aprendizaje
 #   - Gemma 3 (4-bit) — general
 #

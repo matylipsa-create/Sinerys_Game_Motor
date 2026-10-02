@@ -2,17 +2,17 @@
  * LoraPanel — Panel accesible para la red mesh P2P LoRa (SX1262).
  *
  * Voice-First, ARIA live, targets 56px, alto contraste, focus neón 3px.
- * IMPORTA SentraVisionAccessibility para anuncios — NO reimplementa ARIA ni vibrate.
+ * IMPORTA SentraAccessibility para anuncios — NO reimplementa ARIA ni vibrate.
  */
 
 import { useEffect, useState } from 'react';
 import { loraModule, type LoraModuleStatus } from '../modules/LoraModule';
 import { loraMeshManager, type MeshStatus } from '../core/LoraMeshManager';
 import { LoraPacketType } from '../core/LoraProtocol';
-import SentraVisionAccessibility from '../modules/SentraVisionAccessibility';
+import SentraAccessibility from '../modules/SentraAccessibility';
 import { deviceManager } from '../core/DeviceManager';
 
-const accessibility = new SentraVisionAccessibility({ minConfidence: 0.5 });
+const accessibility = new SentraAccessibility({ minConfidence: 0.5 });
 
 const TYPE_LABELS: Record<number, string> = {
   [LoraPacketType.DETECTION]: 'Deteccion',

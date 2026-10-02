@@ -78,6 +78,11 @@ export class SentraCoreEngine {
   private motionListener: ((event: DeviceMotionEvent) => void) | null = null;
   private stopHardwareTelemetry: (() => void) | null = null;
   private lastMotionAlertAt = 0;
+  private inferenceMetrics: { fps: number | null; inferenceTimeMs: number | null } = {
+    fps: null,
+    inferenceTimeMs: null,
+  };
+  private lastInferenceAt: number | null = null;
   private criticalSensorListeners = new Set<(message: string) => void>();
   private lastAcceleration = { x: null as number | null, y: null as number | null, z: null as number | null };
   private simulatedState = {
@@ -339,10 +344,20 @@ export class SentraCoreEngine {
         },
       },
       processingLoad: {
-        fps: 59 + Math.floor(Math.random() * 2),
-        inferenceTimeMs: 12.4 + Number((Math.random() * 1.5).toFixed(1)),
+        fps: this.inferenceMetrics.fps ?? 59 + Math.floor(Math.random() * 2),
+        inferenceTimeMs: this.inferenceMetrics.inferenceTimeMs ?? 12.4 + Number((Math.random() * 1.5).toFixed(1)),
       },
     };
+  }
+
+  recordInferenceSample(inferenceTimeMs: number): void {
+    if (!Number.isFinite(inferenceTimeMs) || inferenceTimeMs < 0) return;
+    const now = performance.now();
+    this.inferenceMetrics = {
+      fps: this.lastInferenceAt === null ? this.inferenceMetrics.fps : 1000 / (now - this.lastInferenceAt),
+      inferenceTimeMs,
+    };
+    this.lastInferenceAt = now;
   }
 
   private handleHardwareTelemetry(update: HardwareTelemetryUpdate): void {

@@ -15,7 +15,7 @@ La aplicacion web incluye una demo operativa de crisis estrategicas y paneles pa
 - `/core` — dashboard de Sentra Core y su estado multiversal.
 - `/master-engine` — controles del motor maestro.
 
-La portada en `/` conecta las superficies gaming y presenta el ciclo del orquestador. La cámara y la demo visual de Sentra Core Vision no forman parte de esta PWA gaming.
+La portada en `/` conecta las superficies gaming y presenta el ciclo del orquestador. La cámara y la demo visual de Sentra Core Orchestrator no forman parte de esta PWA gaming.
 
 ## Sentra Core Orchestrator
 
@@ -44,7 +44,7 @@ npm run build
 - `src/core/` — orquestador y sistemas de juego escritos en TypeScript.
 - `src/components/` — portada, dashboards e interfaces de la aplicacion.
 - `godot/` — prototipos de control para una futura integracion con Godot.
-- `docs/` — arquitectura, vision y decisiones del proyecto.
+- `docs/` — arquitectura, perception y decisiones del proyecto.
 - `server/` — servicios auxiliares y protocolos de Sentra.
 
 ## Direccion

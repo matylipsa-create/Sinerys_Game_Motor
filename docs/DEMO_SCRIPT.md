@@ -1,4 +1,4 @@
-# Demo Script — Sentra Core Vision
+# Demo Script — Sentra Core Orchestrator
 
 ## Duración: 3 minutos
 
@@ -14,17 +14,17 @@
 
 ### Escena 1 — Intro (30 seg)
 
-[Pantalla negra con título "Sentra Visión"]
+[Pantalla negra con título "Sentra Percepción"]
 
-**Voz:** "Sentra Core Vision es una app que devuelve autonomía a personas ciegas. Un solo botón. Cámara + IA + voz. 100% offline."
+**Voz:** "Sentra Core Orchestrator es una app que devuelve autonomía a personas ciegas. Un solo botón. Cámara + IA + voz. 100% offline."
 
 **Acción:** Mostrar la pantalla con el botón gigante en el centro.
 
-### Escena 2 — Activar Visión (30 seg)
+### Escena 2 — Activar Percepción (30 seg)
 
-**Acción:** Tocar el botón "ACTIVAR VISIÓN"
+**Acción:** Tocar el botón "ACTIVAR PERCEPCIÓN"
 
-**Voz de la app:** "Visión activada. Describiendo entorno."
+**Voz de la app:** "Percepción activada. Describiendo entorno."
 
 **Acción:** Mover el celular apuntando a una persona.
 
@@ -46,15 +46,15 @@
 
 **Acción:** Hacer doble toque en la pantalla.
 
-**Voz de la app:** "Visión desactivada."
+**Voz de la app:** "Percepción desactivada."
 
 **Acción:** Hacer doble toque de nuevo.
 
-**Voz de la app:** "Visión activada. Describiendo entorno."
+**Voz de la app:** "Percepción activada. Describiendo entorno."
 
 ### Escena 5 — Cierre (30 seg)
 
-**Voz:** "Sentra Core Vision. Soberanía tecnológica. Veto humano. Trazabilidad inalterable. Cuando todo lo demás se apaga, Sentra Core sigue ahí."
+**Voz:** "Sentra Core Orchestrator. Soberanía tecnológica. Veto humano. Trazabilidad inalterable. Cuando todo lo demás se apaga, Sentra Core sigue ahí."
 
 **Acción:** Mostrar el logo o pantalla final.
 

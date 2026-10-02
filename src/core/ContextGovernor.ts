@@ -36,7 +36,7 @@ const NOISE_KEYWORDS = [
 ];
 
 const CONTEXT_RELEVANCE_KEYWORDS: Record<string, string[]> = {
-  vision: ['ver', 'detectar', 'escena', 'objeto', 'persona', 'camara', 'describir', 'que ves'],
+  perception: ['ver', 'detectar', 'escena', 'objeto', 'persona', 'camara', 'describir', 'que ves'],
   bio: ['respirar', 'coherencia', 'estres', 'calmar', 'placebo', 'reencuadre', 'neuroplasticidad', 'epigenetica'],
   seguridad: ['alerta', 'peligro', 'usb', 'guardian', 'monitoreo', 'sincronizacion'],
   evidencia: ['evidencia', 'evolis', 'cadena', 'hash', 'verificar', 'exportar'],

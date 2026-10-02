@@ -29,7 +29,7 @@ import {
 const CATEGORY_LABELS: Record<string, string> = {
   ambient: "Ambiental",
   motion: "Movimiento",
-  vision: "Visión",
+  perception: "Percepción",
   audio: "Audio",
   contact: "Contacto",
   gas: "Gas",

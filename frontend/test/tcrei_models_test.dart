@@ -27,7 +27,7 @@ void main() {
 
     test('toJson and fromJson roundtrip', () {
       final msg = TCREIMessage.command(
-        module: 'vision',
+        module: 'perception',
         action: 'process',
         payload: {'command': 'describir escena'},
       );

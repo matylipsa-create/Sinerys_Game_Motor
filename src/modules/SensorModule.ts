@@ -80,9 +80,9 @@ const DEFAULT_RULES: Rule[] = [
     detail: "Aceleración excesiva detectada. Alarma sonora y visual activada.",
   },
   {
-    id: "rule-vision-motion",
+    id: "rule-perception-motion",
     name: "Movimiento visual → Grabación",
-    category: "vision",
+    category: "perception",
     minLevel: "info",
     messageContains: "Movimiento visual",
     action: "start_recording",

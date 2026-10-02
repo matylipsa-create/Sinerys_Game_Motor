@@ -1,4 +1,4 @@
-# Decisiones de Auditoría — Sentra Core Vision
+# Decisiones de Auditoría — Sentra Core Orchestrator
 
 ## Fecha: 2026-09-13
 

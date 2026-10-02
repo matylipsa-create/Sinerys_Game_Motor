@@ -22,7 +22,7 @@ const LABELS_ES: Record<string, string> = {
   'traffic light': 'semáforo', 'stop sign': 'señal de alto', 'potted plant': 'planta',
 };
 
-export interface BlindVisionPanelActions {
+export interface BlindPerceptionPanelActions {
   toggleCamera: () => void;
   setCamera: (active: boolean) => void;
   describeNow: () => void;
@@ -47,7 +47,7 @@ function directionInSpanish(direction: 'left' | 'center' | 'right'): string {
   return 'al frente';
 }
 
-export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function BlindVisionPanel(_props, ref) {
+export const BlindPerceptionPanel = forwardRef<BlindPerceptionPanelActions>(function BlindPerceptionPanel(_props, ref) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const lastAnnouncementRef = useRef({ signature: '', timestamp: 0 });
@@ -55,7 +55,7 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isReadingText, setIsReadingText] = useState(false);
   const profile = useRef(hardwareAutoAdjust.getProfile(deviceManager.detect())).current;
-  const intervalMs = Math.max(2000, profile.visionIntervalMs || 5000);
+  const intervalMs = Math.max(2000, profile.perceptionIntervalMs || 5000);
   const { loading, error: modelError, detections } = useRealModeSensors(videoRef, cameraActive, intervalMs);
 
   useEffect(() => {
@@ -169,18 +169,18 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
       const message = `Posible obstáculo: ${objectDescription}, de gran tamaño en la imagen. Detente y verifica con tu técnica habitual.`;
       voiceManager.stop();
       voiceManager.speak(message, 1);
-      deviceManager.vibratePattern(area >= 0.25 ? 'VISION_VERY_CLOSE' : 'VISION_CLOSE');
-      void evolis.record('blind_vision', 'possible_obstacle_alert', JSON.stringify({
+      deviceManager.vibratePattern(area >= 0.25 ? 'PERCEPTION_VERY_CLOSE' : 'PERCEPTION_CLOSE');
+      void evolis.record('blind_perception', 'possible_obstacle_alert', JSON.stringify({
         object: primary.class,
         direction,
         imageScale: 'large',
-      })).catch((auditError: unknown) => console.warn('[BlindVision] No se pudo registrar alerta:', auditError));
+      })).catch((auditError: unknown) => console.warn('[BlindPerception] No se pudo registrar alerta:', auditError));
     } else if (!cognitiveLoadManager.shouldThrottle()) {
       voiceManager.speak(`Detectado: ${objectDescription}.`, 4);
     }
 
     const centerX = (primary.bbox[0] + primary.bbox[2] / 2) / videoWidth;
-    sentraGuardianHub.onVisionDetection({
+    sentraGuardianHub.onPerceptionDetection({
       label: labelInSpanish(primary.class),
       confidence: primary.score,
       panX: (centerX - 0.5) * 2,
@@ -203,8 +203,8 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
         return;
       }
       voiceManager.speak(`Texto detectado: ${text.slice(0, 400)}`, 2);
-      void evolis.record('blind_vision', 'ocr_read', JSON.stringify({ characters: text.length }))
-        .catch((auditError: unknown) => console.warn('[BlindVision] No se pudo registrar OCR:', auditError));
+      void evolis.record('blind_perception', 'ocr_read', JSON.stringify({ characters: text.length }))
+        .catch((auditError: unknown) => console.warn('[BlindPerception] No se pudo registrar OCR:', auditError));
     } catch (error) {
       setCameraError(error instanceof Error ? error.message : 'No se pudo leer el texto.');
       voiceManager.speak('No se pudo leer el texto.', 2);
@@ -222,7 +222,7 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
     const imageWidth = videoRef.current?.videoWidth || 640;
     const imageHeight = videoRef.current?.videoHeight || 480;
     return {
-      visionDetections: detections.map(({ class: label, score, bbox }) => ({ class: label, score, bbox })),
+      perceptionDetections: detections.map(({ class: label, score, bbox }) => ({ class: label, score, bbox })),
       imageWidth,
       imageHeight,
       summary: detections.slice(0, 5).map((detection) => labelInSpanish(detection.class)).join(', '),
@@ -242,14 +242,14 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
   }, []);
 
   return (
-    <div className="blind-vision-panel" role="region" aria-label="Asistencia visual para personas ciegas">
-      <div className="blind-vision-heading">
+    <div className="blind-perception-panel" role="region" aria-label="Asistencia visual para personas ciegas">
+      <div className="blind-perception-heading">
         <div>
-          <h2 className="blind-panel-title">Sentra Visión</h2>
+          <h2 className="blind-panel-title">Sentra Percepción</h2>
           <p className="blind-panel-desc">Inferencia en el dispositivo. La cámara se activa a demanda; el primer uso puede requerir Internet para descargar el modelo.</p>
         </div>
-        <span className="blind-vision-status" role="status" aria-live="polite">
-          {!cameraActive ? 'Cámara apagada' : isReadingText ? 'Leyendo texto' : loading ? 'Cargando modelo' : cameraError || modelError ? 'Revisa permisos o modelo' : 'Visión activa'}
+        <span className="blind-perception-status" role="status" aria-live="polite">
+          {!cameraActive ? 'Cámara apagada' : isReadingText ? 'Leyendo texto' : loading ? 'Cargando modelo' : cameraError || modelError ? 'Revisa permisos o modelo' : 'Percepción activa'}
         </span>
       </div>
       <video
@@ -262,7 +262,7 @@ export const BlindVisionPanel = forwardRef<BlindVisionPanelActions>(function Bli
         tabIndex={-1}
       />
 
-      <div className="blind-vision-actions">
+      <div className="blind-perception-actions">
         <button
           className="blind-action-btn blind-camera-btn"
           onClick={toggleCamera}

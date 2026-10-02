@@ -162,10 +162,10 @@ class MotionSensor extends BaseSensor {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Sensores de visión
+// Sensores de percepción
 // ──────────────────────────────────────────────────────────────────────────
 
-class VisionSensor extends BaseSensor {
+class PerceptionSensor extends BaseSensor {
   private readonly labelPool = [
     "persona", "vehículo", "caja", "puerta", "ventana", "animal", "bolsa",
   "máquina", "carretilla", "paquete",
@@ -337,8 +337,8 @@ export function createSimulatedSensors(): Sensor[] {
     new AmbientSensor("amb-02", "Clima Exterior", "ambient", "°C/%/hPa/lx", "Exterior — Azotea", 0.5),
     new MotionSensor("mot-01", "Acelerómetro Estructura", "motion", "g/°/s", "Pilar Central", 2),
     new MotionSensor("mot-02", "Vibración Motor", "motion", "g/°/s", "Sala de Máquinas", 4),
-    new VisionSensor("vis-01", "Cámara Entrada", "vision", "objetos", "Acceso Principal", 1),
-    new VisionSensor("vis-02", "Cámara Almacén", "vision", "objetos", "Almacén B-2", 1),
+    new PerceptionSensor("vis-01", "Cámara Entrada", "perception", "objetos", "Acceso Principal", 1),
+    new PerceptionSensor("vis-02", "Cámara Almacén", "perception", "objetos", "Almacén B-2", 1),
     new AudioSensor("aud-01", "Micrófono Ambiental", "audio", "dB", "Oficina Central", 2),
     new ContactSensor("cnt-01", "Puerta Principal", "contact", "estado", "Acceso Principal", 1),
     new ContactSensor("cnt-02", "Ventana Sala A", "contact", "estado", "Sala A — Ventana", 1),

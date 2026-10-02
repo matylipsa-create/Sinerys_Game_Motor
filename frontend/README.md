@@ -74,7 +74,7 @@ lib/
     evidence_screen.dart       Modo evidencia
     guardian_screen.dart       Modo guardian
     learning_screen.dart       Modo aprendizaje
-    vision_screen.dart         Modo vision
+    perception_screen.dart         Modo perception
     silence_screen.dart        Modo silencio
     settings_screen.dart       Configuracion
 ```

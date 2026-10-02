@@ -42,7 +42,10 @@ export function useRealModeSensors(
 
     async function loadModel() {
       try {
-        const tf = await import('@tensorflow/tfjs');
+        const tf = await import('@tensorflow/tfjs') as unknown as {
+          ready: () => Promise<void>;
+          setBackend: (backend: 'webgl' | 'cpu') => Promise<boolean>;
+        };
         const cocoSsd = await import('@tensorflow-models/coco-ssd');
         await tf.ready();
         try {
@@ -124,7 +127,7 @@ export function useRealModeSensors(
         }));
         perceptionEngine.current.setBioContext(bioSoftware.getState());
         const perception = perceptionEngine.current.process({
-          visionDetections: detections,
+          perceptionDetections: detections,
           imageWidth: video.videoWidth,
           imageHeight: video.videoHeight,
         });
@@ -136,7 +139,7 @@ export function useRealModeSensors(
         if (eval_.allowed && labels.length > 0
           && (signature !== lastAudit.signature || auditNow - lastAudit.timestamp >= 30000)) {
           lastAuditRef.current = { signature, timestamp: auditNow };
-          void evolis.record('vision', 'detection_summary', JSON.stringify({ labels, count: detections.length }))
+          void evolis.record('perception', 'detection_summary', JSON.stringify({ labels, count: detections.length }))
             .catch((auditError: unknown) => console.warn('[COCO-SSD] No se pudo registrar el resumen:', auditError));
         }
         setState((s) => ({

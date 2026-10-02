@@ -5,15 +5,15 @@ export interface HardwareProfile {
   tier: 'low' | 'medium' | 'high' | 'desktop';
   label: string;
   powerMode: PowerMode;
-  visionModel: 'lite_mobilenet_v2' | 'mobilenet_v2' | 'none';
+  perceptionModel: 'lite_mobilenet_v2' | 'mobilenet_v2' | 'none';
   maxFps: number;
-  enableVision: boolean;
+  enablePerception: boolean;
   enableGPS: boolean;
   enableIMU: boolean;
   enableAudio: boolean;
   enableBackgroundSync: boolean;
   sensorIntervalMs: number;
-  visionIntervalMs: number;
+  perceptionIntervalMs: number;
   enableBio: boolean;
   bioSessionDuration: number;
 }
@@ -44,15 +44,15 @@ export class HardwareAutoAdjust {
           tier: 'desktop',
           label: 'PC - Maximo rendimiento',
           powerMode: 'alto_rendimiento',
-          visionModel: 'mobilenet_v2',
+          perceptionModel: 'mobilenet_v2',
           maxFps: 30,
-          enableVision: true,
+          enablePerception: true,
           enableGPS: false,
           enableIMU: false,
           enableAudio: true,
           enableBackgroundSync: true,
           sensorIntervalMs: 500,
-          visionIntervalMs: 1000,
+          perceptionIntervalMs: 1000,
           enableBio: true,
           bioSessionDuration: 300,
         };
@@ -61,15 +61,15 @@ export class HardwareAutoAdjust {
           tier: 'high',
           label: 'Celular alto - COCO-SSD completo',
           powerMode: 'alto_rendimiento',
-          visionModel: 'mobilenet_v2',
+          perceptionModel: 'mobilenet_v2',
           maxFps: 30,
-          enableVision: true,
+          enablePerception: true,
           enableGPS: true,
           enableIMU: true,
           enableAudio: true,
           enableBackgroundSync: true,
           sensorIntervalMs: 1000,
-          visionIntervalMs: 1000,
+          perceptionIntervalMs: 1000,
           enableBio: true,
           bioSessionDuration: 300,
         };
@@ -78,15 +78,15 @@ export class HardwareAutoAdjust {
           tier: 'medium',
           label: 'Celular medio - COCO-SSD lite',
           powerMode: 'normal',
-          visionModel: 'lite_mobilenet_v2',
+          perceptionModel: 'lite_mobilenet_v2',
           maxFps: 15,
-          enableVision: true,
+          enablePerception: true,
           enableGPS: true,
           enableIMU: true,
           enableAudio: true,
           enableBackgroundSync: true,
           sensorIntervalMs: 3000,
-          visionIntervalMs: 5000,
+          perceptionIntervalMs: 5000,
           enableBio: true,
           bioSessionDuration: 240,
         };
@@ -96,15 +96,15 @@ export class HardwareAutoAdjust {
           tier: 'low',
           label: 'Celular bajo - Ultra ahorro',
           powerMode: 'ultra_ahorro',
-          visionModel: 'none',
+          perceptionModel: 'none',
           maxFps: 5,
-          enableVision: false,
+          enablePerception: false,
           enableGPS: false,
           enableIMU: true,
           enableAudio: false,
           enableBackgroundSync: false,
           sensorIntervalMs: 10000,
-          visionIntervalMs: 0,
+          perceptionIntervalMs: 0,
           enableBio: true,
           bioSessionDuration: 180,
         };

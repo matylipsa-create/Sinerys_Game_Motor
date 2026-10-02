@@ -20,7 +20,7 @@ function isPlayerState(value: unknown): value is PlayerState {
     && Number.isInteger(state.shelterVisits) && Number(state.shelterVisits) >= 0
     && Number.isInteger(state.realityTier) && Number(state.realityTier) >= 0
     && ['ISOMETRIC', 'FIRST_PERSON', 'SIDE_SCROLLER'].includes(state.activeCameraMode as string)
-    && typeof state.mantisVisionActive === 'boolean';
+    && typeof state.mantisFiltersActive === 'boolean';
 }
 
 function isTacticalEvent(value: unknown): value is TacticalEvent {

@@ -46,33 +46,30 @@ export class BehaviorDNAEngine {
 
   public evolveMobsForTier(realityTier: number): MobBehaviorDNA[] {
     const tier = Number.isFinite(realityTier) ? Math.max(0, realityTier) : 0;
-    const baseMultiplier = 1.0 + (tier * 0.25);
+    const baseMultiplier = 1.0 + (tier * 0.3);
     return [
       {
         mobTypeId: 'BIOMASS_STALKER',
-        aggressionLevel: 1.2 * baseMultiplier,
+        aggressionLevel: Number((1.2 * baseMultiplier).toFixed(2)),
         mutationResistance: 0.4,
         mantisVulnerability: 'THERMAL',
       },
       {
         mobTypeId: 'INDUSTRIAL_AUTOMATON',
-        aggressionLevel: 0.8 * baseMultiplier,
+        aggressionLevel: Number((0.8 * baseMultiplier).toFixed(2)),
         mutationResistance: 0.9,
         mantisVulnerability: 'CHROMA',
       },
     ];
   }
 
-  public evaluateCrisisTrigger(shelterVisits: number, realityTier = 0): FactionCrisis | null {
+  public evaluateCrisisTrigger(shelterVisits: number): FactionCrisis | null {
     if (!Number.isInteger(shelterVisits) || shelterVisits <= 0 || shelterVisits % 2 !== 0) return null;
-    const omegaTriggered = realityTier >= 4 && Math.random() < 0.15;
     const crisis: FactionCrisis = {
-      crisisId: `crisis_${Date.now()}_${this.currentCrises.length}`,
-      title: omegaTriggered ? 'Omega Breach: Hull Memory Collapse' : 'Containment Breach in Sector B',
-      description: omegaTriggered
-        ? 'The ship has begun rewriting its own internal geometry.'
-        : 'Reconfigured biomass has blocked the main ventilation ducts.',
-      severity: omegaTriggered ? 'OMEGA' : shelterVisits % 4 === 0 ? 'CRITICAL' : 'LOW',
+      crisisId: `crisis_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      title: `Brecha estructural [Vector de nivel ${shelterVisits}]`,
+      description: 'La biomasa reconfigurada genera presión anómala en los circuitos de control.',
+      severity: shelterVisits % 4 === 0 ? 'CRITICAL' : 'LOW',
       resolved: false,
     };
     this.currentCrises = [crisis, ...this.currentCrises];

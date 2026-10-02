@@ -33,7 +33,7 @@ export interface BridgeResponsePayload {
 }
 
 const MODULE_CONTEXTS: Record<string, string> = {
-  vision: 'Asistencia visual para personas con discapacidad visual',
+  perception: 'Asistencia visual para personas con discapacidad visual',
   seguridad: 'Monitoreo de seguridad y alertas',
   movimiento: 'Navegación y orientación espacial',
   juego: 'Experiencia interactiva y narrativa',

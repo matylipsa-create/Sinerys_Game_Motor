@@ -6,7 +6,7 @@
 
 ---
 
-## Visión General
+## Percepción General
 
 El protocolo P2P LoRa (SX1262) permite la comunicación entre nodos Sentra Core sin infraestructura celular ni WiFi. Cada nodo es repetidor. El protocolo opera en dos capas:
 
@@ -139,9 +139,9 @@ Los eventos del PerceptionEngine (detecciones, alertas) se empaquetan en `LoraPa
 
 Las alertas recibidas de otros nodos se inyectan en `AlertModule` para notificación local (voz, vibración, registro).
 
-### SentraVisionAccessibility
+### SentraAccessibility
 
-`LoraPanel.tsx` importa `SentraVisionAccessibility` para anuncios accesibles. No reimplementa ARIA live region, speechSynthesis ni navigator.vibrate.
+`LoraPanel.tsx` importa `SentraAccessibility` para anuncios accesibles. No reimplementa ARIA live region, speechSynthesis ni navigator.vibrate.
 
 ---
 

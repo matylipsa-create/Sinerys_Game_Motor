@@ -19,7 +19,7 @@ async function main() {
   console.log();
 
   await evolis.initialize();
-  await evolis.record('vision', 'detection', 'person:0.95,car:0.82');
+  await evolis.record('perception', 'detection', 'person:0.95,car:0.82');
   await evolis.record('seguridad', 'alert', 'motion_detected');
   await evolis.record('evidencia', 'export', 'hash_chain_verified');
 

@@ -11,7 +11,7 @@ export interface PlayerState {
   shelterVisits: number;
   realityTier: number;
   activeCameraMode: CameraMode;
-  mantisVisionActive: boolean;
+  mantisFiltersActive: boolean;
 }
 
 export interface TacticalEvent {
@@ -29,7 +29,7 @@ const INITIAL_STATE: PlayerState = {
   shelterVisits: 3,
   realityTier: 0,
   activeCameraMode: 'ISOMETRIC',
-  mantisVisionActive: false,
+  mantisFiltersActive: false,
 };
 
 export class ParadoxOrchestratorEngine {
@@ -67,7 +67,7 @@ export class ParadoxOrchestratorEngine {
     this.recordEvent('SYSTEM', mutated
       ? `Spacetime mutation triggered. Reality tier ${this.state.realityTier}.`
       : `Shelter visit registered (${this.state.shelterVisits % 4}/4 to mutation).`);
-    const crisis = this.behaviorDNA.evaluateCrisisTrigger(this.state.shelterVisits, this.state.realityTier);
+    const crisis = this.behaviorDNA.evaluateCrisisTrigger(this.state.shelterVisits);
     if (crisis) {
       this.recordEvent('CRISIS', `${crisis.severity}: ${crisis.title}`);
       bridge.sendCommand({ type: 'TRIGGER_CRISIS', payload: { crisis } });
@@ -126,14 +126,14 @@ export class ParadoxOrchestratorEngine {
     return this.state.activeCameraMode;
   }
 
-  public toggleMantisVision(): boolean {
-    this.state.mantisVisionActive = !this.state.mantisVisionActive;
+  public toggleMantisFilters(): boolean {
+    this.state.mantisFiltersActive = !this.state.mantisFiltersActive;
     this.persist();
     bridge.sendCommand({
       type: 'UPDATE_PERCEPTION',
-      payload: { mantisVisionActive: this.state.mantisVisionActive },
+      payload: { mantisFiltersActive: this.state.mantisFiltersActive },
     });
-    return this.state.mantisVisionActive;
+    return this.state.mantisFiltersActive;
   }
 
   public registerFactionEvent(faction: string, detail: string): void {
@@ -168,9 +168,9 @@ export class ParadoxOrchestratorEngine {
       }
       case 'UPDATE_PERCEPTION': {
         const cameraMode = command.payload.activeCameraMode;
-        const mantisVisionActive = command.payload.mantisVisionActive;
+        const mantisFiltersActive = command.payload.mantisFiltersActive;
         if (CAMERA_MODES.includes(cameraMode as CameraMode)) this.state.activeCameraMode = cameraMode as CameraMode;
-        if (typeof mantisVisionActive === 'boolean') this.state.mantisVisionActive = mantisVisionActive;
+        if (typeof mantisFiltersActive === 'boolean') this.state.mantisFiltersActive = mantisFiltersActive;
         this.persist();
         break;
       }

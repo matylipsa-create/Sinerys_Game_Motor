@@ -85,7 +85,7 @@ test('air-gap delta encrypts, chunks, verifies EVOLIS, and imports to an isolate
     saveKeyPair: async (created) => { keyPair = created; },
     saveEvidence: async (entry) => { evidence.push(entry); },
   });
-  await source.record('vision', 'detection', JSON.stringify({ label: 'person' }));
+  await source.record('perception', 'detection', JSON.stringify({ label: 'person' }));
   await source.record('telemetry', 'sample', JSON.stringify({ temperature: 22 }));
   for (const entry of evidence) await sourceStorage.saveEvidence(entry);
   assert.ok(keyPair);

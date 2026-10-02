@@ -51,7 +51,7 @@ type ActionListener = (action: DispatchAction) => void;
 const CATEGORY_ACTION_MAP: Record<string, RouteActionType> = {
   ambient: 'log',
   motion: 'alert',
-  vision: 'voice',
+  perception: 'voice',
   audio: 'alert',
   contact: 'alert',
   gas: 'alert',

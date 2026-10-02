@@ -7,5 +7,6 @@ vite.config.ts.timestamp-*.mjs
 build/
 *.log
 /frontend/android/local.properties
+/frontend/android/.gradle/
 server/data/
 server/server/data/

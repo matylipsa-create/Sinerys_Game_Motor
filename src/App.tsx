@@ -6,6 +6,7 @@ import { GameDashboard } from './components/GameDashboard';
 import { ConquerHome } from './components/ConquerHome';
 import { SentraCoreArenaView } from './pwa/arena/SentraCoreArenaView';
 import { GameEngineCore } from './core/GameEngineCore';
+import { ParadoxPlayground } from './components/ParadoxPlayground';
 
 function getRoute(): string {
   return window.location.pathname.replace(/\/+$/, '') || '/';
@@ -54,6 +55,20 @@ export default function App() {
     return <SentraCoreArenaView onNavigate={navigate} />;
   }
 
+  if (route === '/paradox') {
+    return (
+      <>
+        <InterfaceSettings />
+        <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
+          <button type="button" onClick={() => navigate('/')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+            VOLVER A CONQUER
+          </button>
+        </nav>
+        <ParadoxPlayground />
+      </>
+    );
+  }
+
   if (route === '/core') {
     return (
       <>
@@ -64,6 +79,9 @@ export default function App() {
           </button>
           <button type="button" onClick={() => navigate('/arena')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
             SALA DE ARENA
+          </button>
+          <button type="button" onClick={() => navigate('/paradox')} className="min-h-11 border border-[#d2f36b]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#d2f36b] hover:bg-[#d2f36b] hover:text-black">
+            PARADOX ORCHESTRATOR
           </button>
           <button type="button" onClick={() => navigate('/game')} className="min-h-11 border border-amber-200/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-amber-100 hover:bg-amber-200 hover:text-black">
             JUEGO

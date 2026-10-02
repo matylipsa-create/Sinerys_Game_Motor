@@ -12,13 +12,13 @@ Sentra Core es un **motor de inteligencia artificial soberano**, offline-first, 
 
 ## 9 Modos de Operación
 
-Visión · Seguridad · Movimiento · Juego · Aprendizaje · Impacto · Silencio · Evidencia · Bio
+Percepción · Seguridad · Movimiento · Juego · Aprendizaje · Impacto · Silencio · Evidencia · Bio
 
 Cada modo reutiliza el mismo motor con 14 módulos de núcleo: MoralNode (filtro ético), EVOLIS (trazabilidad), BioSoftwareInterface, PerceptionEngine (con anti-paraidolia), BacterialGuardian, SyncManager (LoRa/BT Mesh), y más.
 
 ## Verticales
 
-- **Sentra Visión** — Asistencia visual para personas ciegas (validado con UMADESCA)
+- **Sentra Percepción** — Asistencia visual para personas ciegas (validado con UMADESCA)
 - **Sentinel** — Seguridad y monitoreo con Guardian Bacteriano
 - **EVOLIS** — Trazabilidad inalterable standalone
 - **ZION** — Domótica soberana sin nube
@@ -27,7 +27,7 @@ Cada modo reutiliza el mismo motor con 14 módulos de núcleo: MoralNode (filtro
 
 ## Validación
 
-- **UMADESCA** (Unión Marplatense de Discapacidad Visual): usuarios reales probando Sentra Visión
+- **UMADESCA** (Unión Marplatense de Discapacidad Visual): usuarios reales probando Sentra Percepción
 - **Naty**: usuario piloto de asistencia visual
 - Código funcional con build de producción verificado
 

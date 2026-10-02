@@ -177,7 +177,7 @@ export class SkillPerceptionEngine {
     const filtered = events.filter((event) => {
       const module = (event.module ?? '').toLowerCase();
       const action = (event.action ?? '').toLowerCase();
-      return module.includes('vision') || module.includes('detection') || module.includes('context') || action.includes('vision') || action.includes('detection') || action.includes('context');
+      return module.includes('perception') || module.includes('detection') || module.includes('context') || action.includes('perception') || action.includes('detection') || action.includes('context');
     });
 
     if (filtered.length === 0) return;

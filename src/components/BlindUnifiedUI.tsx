@@ -9,7 +9,7 @@ import { createGPSSensor } from "../services/GPSSensorService";
 import type { HardwareTelemetryLogEntry } from "../services/HardwareTelemetryService";
 import { sentraGuardianHub } from "../core/SentraGuardianHub";
 import { BlindTactileQuadrants } from "./BlindTactileQuadrants";
-import { BlindVisionPanel, type BlindVisionPanelActions } from "./BlindVisionPanel";
+import { BlindPerceptionPanel, type BlindPerceptionPanelActions } from "./BlindPerceptionPanel";
 import { voiceManager } from "../services/VoiceManager";
 import { VoiceOrbButton } from "./VoiceOrbButton";
 import { useApp } from "../context/AppContext";
@@ -33,7 +33,7 @@ function describeTelemetry(entry: HardwareTelemetryLogEntry): string {
 }
 
 export function BlindUnifiedUI({ telemetry }: BlindUnifiedUIProps) {
-  const visionActionsRef = useRef<BlindVisionPanelActions>(null);
+  const perceptionActionsRef = useRef<BlindPerceptionPanelActions>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const { processCommand, isPassiveListening, togglePassiveListening } = useApp();
 
@@ -63,22 +63,22 @@ export function BlindUnifiedUI({ telemetry }: BlindUnifiedUIProps) {
 
   const handleVoiceCommand = useCallback((command: string): boolean => {
     const normalized = command.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const visionActions = visionActionsRef.current;
+    const perceptionActions = perceptionActionsRef.current;
 
-    if (/(activa|inicia|enciende).*(camara|vision)/.test(normalized)) {
-      visionActions?.setCamera(true);
+    if (/(activa|inicia|enciende).*(camara|perception)/.test(normalized)) {
+      perceptionActions?.setCamera(true);
       return true;
     }
-    if (/(desactiva|deten|apaga|para).*(camara|vision)/.test(normalized)) {
-      visionActions?.setCamera(false);
+    if (/(desactiva|deten|apaga|para).*(camara|perception)/.test(normalized)) {
+      perceptionActions?.setCamera(false);
       return true;
     }
     if (/(lee|leer|lectura).*(texto|cartel|letrero)/.test(normalized)) {
-      visionActions?.readText();
+      perceptionActions?.readText();
       return true;
     }
     if (/(describe|descripcion|que ves|que hay delante|que hay enfrente)/.test(normalized)) {
-      visionActions?.describeNow();
+      perceptionActions?.describeNow();
       return true;
     }
     if (/(silencio|calla|deja de hablar)/.test(normalized)) {
@@ -87,17 +87,17 @@ export function BlindUnifiedUI({ telemetry }: BlindUnifiedUIProps) {
       return true;
     }
 
-    void processCommand(command, visionActions?.getPerception() ?? undefined);
+    void processCommand(command, perceptionActions?.getPerception() ?? undefined);
     return true;
   }, [isPassiveListening, processCommand, togglePassiveListening]);
 
   const handleQuadrantAction = (action: string, _quadrant: string, gesture: 'tap' | 'longPress') => {
     switch (action) {
       case 'TOGGLE_EYES_MODE':
-        visionActionsRef.current?.toggleCamera();
+        perceptionActionsRef.current?.toggleCamera();
         break;
       case 'DESCRIBE_NOW':
-        visionActionsRef.current?.describeNow();
+        perceptionActionsRef.current?.describeNow();
         break;
       case 'SENTINEL_STATUS': {
         const state = sentraGuardianHub.getState();
@@ -123,7 +123,7 @@ export function BlindUnifiedUI({ telemetry }: BlindUnifiedUIProps) {
 
   return (
     <main className="sentra-app-shell">
-      <BlindVisionPanel ref={visionActionsRef} />
+      <BlindPerceptionPanel ref={perceptionActionsRef} />
       <section className="blind-voice-entry" aria-label="Conversación por voz">
         <VoiceOrbButton onCommand={handleVoiceCommand} />
       </section>
@@ -134,16 +134,16 @@ export function BlindUnifiedUI({ telemetry }: BlindUnifiedUIProps) {
         <summary>Más funciones y ajustes</summary>
         {advancedOpen && (
           <div className="blind-advanced-content">
-            <div className="blind-vision-actions">
-              <button type="button" className="blind-action-btn" onClick={() => visionActionsRef.current?.describeNow()}>
+            <div className="blind-perception-actions">
+              <button type="button" className="blind-action-btn" onClick={() => perceptionActionsRef.current?.describeNow()}>
                 Describir el entorno
               </button>
-              <button type="button" className="blind-action-btn" onClick={() => visionActionsRef.current?.readText()}>
+              <button type="button" className="blind-action-btn" onClick={() => perceptionActionsRef.current?.readText()}>
                 Leer texto con OCR
               </button>
             </div>
             <p>Para historial, reversión y controles clásicos:</p>
-            <a href="/vision">Abrir herramientas avanzadas</a>
+            <a href="/perception">Abrir herramientas avanzadas</a>
             <section className="hardware-telemetry" aria-labelledby="hardware-telemetry-title">
               <header className="hardware-telemetry-header">
                 <h2 id="hardware-telemetry-title">Telemetría de hardware</h2>

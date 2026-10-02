@@ -60,7 +60,7 @@ Enviar mensajes JSON con la estructura:
 ```json
 {
   "type": "command | query",
-  "module": "vision | bio | evidencia | ...",
+  "module": "perception | bio | evidencia | ...",
   "action": "process | get_status | start_session | ...",
   "payload": { ... },
   "timestamp": 1694123456789,

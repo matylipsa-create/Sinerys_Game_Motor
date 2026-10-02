@@ -2,7 +2,7 @@
  * ModelManager — Gestor de modelos IA locales (Ollama).
  *
  * Detecta modelos disponibles, carga/descarga, y selecciona el modelo
- * óptimo según la tarea (visión, bio, seguridad, aprendizaje, general).
+ * óptimo según la tarea (percepción, bio, seguridad, aprendizaje, general).
  * Soporta Llama 3, Qwen 2.5 y Gemma 3 cuantizados.
  */
 
@@ -31,7 +31,7 @@ export interface ModelManagerStatus {
 type ModelManagerListener = (status: ModelManagerStatus) => void;
 
 const RECOMMENDED_MODELS: { id: string; label: string; task: AITask }[] = [
-  { id: 'llama3:8b', label: 'Llama 3 8B', task: 'vision' },
+  { id: 'llama3:8b', label: 'Llama 3 8B', task: 'perception' },
   { id: 'qwen2.5:7b', label: 'Qwen 2.5 7B', task: 'bio' },
   { id: 'gemma3:latest', label: 'Gemma 3', task: 'general' },
   { id: 'llama3:8b-q4_K_M', label: 'Llama 3 8B Q4_K_M', task: 'security' },
@@ -39,7 +39,7 @@ const RECOMMENDED_MODELS: { id: string; label: string; task: AITask }[] = [
 ];
 
 const TASK_PREFERENCE: Record<AITask, string[]> = {
-  vision: ['llama3:8b', 'llama3:8b-q4_K_M', 'gemma3:latest'],
+  perception: ['llama3:8b', 'llama3:8b-q4_K_M', 'gemma3:latest'],
   bio: ['qwen2.5:7b', 'qwen2.5:7b-q4_K_M', 'gemma3:latest'],
   security: ['llama3:8b-q4_K_M', 'llama3:8b', 'gemma3:latest'],
   learning: ['qwen2.5:7b-q4_K_M', 'qwen2.5:7b', 'gemma3:latest'],

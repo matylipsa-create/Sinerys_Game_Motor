@@ -65,7 +65,7 @@ stateDiagram-v2
 ```mermaid
 flowchart TB
   Core["Sentra Core<br/>reglas · contexto · evidencia"]
-  Core --> PWA["PWA / Sentra Vision"]
+  Core --> PWA["PWA / Sentra Perception"]
   Core --> Flutter["Flutter móvil"]
   Core --> API["API + WebSocket"]
   Core --> Totem["Tótem 2.0<br/>ESP32 + LoRa"]

@@ -188,7 +188,7 @@ class SentraStateNotifier extends ChangeNotifier {
     try {
       final status = await _client.getStatus();
       _state = _state.copyWith(
-        activeModule: status['activeModule'] as String? ?? 'vision',
+        activeModule: status['activeModule'] as String? ?? 'perception',
         humanVeto: status['humanVeto'] as bool? ?? false,
         bioEnabled: status['bioEnabled'] as bool? ?? false,
         geminiRemote: status['geminiRemote'] as bool? ?? false,

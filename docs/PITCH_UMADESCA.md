@@ -1,4 +1,4 @@
-# Sentra Core Vision — Pitch UMADESCA
+# Sentra Core Orchestrator — Pitch UMADESCA
 
 ## El problema
 
@@ -10,11 +10,11 @@ Las personas ciegas dependen de otros para moverse por su entorno. Las solucione
 
 ## La solución
 
-**Sentra Core Vision** es una app que devuelve autonomía a personas ciegas desde su celular.
+**Sentra Core Orchestrator** es una app que devuelve autonomía a personas ciegas desde su celular.
 
 ### Cómo funciona
 
-1. Usuario toca UN botón: "ACTIVAR VISIÓN"
+1. Usuario toca UN botón: "ACTIVAR PERCEPCIÓN"
 2. Cámara del celular captura el entorno
 3. IA local (COCO-SSD) detecta objetos (personas, autos, obstáculos)
 4. Voz describe lo que hay: "Detectados: persona a la izquierda, auto a la derecha"
@@ -39,7 +39,7 @@ Las personas ciegas dependen de otros para moverse por su entorno. Las solucione
 ### Tracción
 
 - Demo funcional en producción
-- Código abierto en GitHub (matylipsa-create/Sentra-Core-Vision)
+- Código abierto en GitHub (matylipsa-create/Sentra-Core-Orchestrator)
 - Arquitectura validada: Motor + UI + Backend
 - UMADESCA identificada como partner estratégico
 

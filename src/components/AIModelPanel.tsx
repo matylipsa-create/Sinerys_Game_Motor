@@ -2,17 +2,17 @@
  * AIModelPanel — Panel accesible para gestión de modelos IA locales (Ollama).
  *
  * Voice-First, ARIA live, targets 56px, alto contraste, focus neón 3px.
- * IMPORTA SentraVisionAccessibility desde src/modules/SentraVisionAccessibility.ts
+ * IMPORTA SentraAccessibility desde src/modules/SentraAccessibility.ts
  * para anuncios accesibles. NO reimplementa ARIA live region ni vibrate.
  */
 
 import { useEffect, useState } from 'react';
 import { aiModule, type AIModuleStatus } from '../modules/AIModule';
 import { type ManagedModel } from '../core/ModelManager';
-import SentraVisionAccessibility from '../modules/SentraVisionAccessibility';
+import SentraAccessibility from '../modules/SentraAccessibility';
 import { deviceManager } from '../core/DeviceManager';
 
-const accessibility = new SentraVisionAccessibility({ minConfidence: 0.5 });
+const accessibility = new SentraAccessibility({ minConfidence: 0.5 });
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '—';

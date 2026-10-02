@@ -36,8 +36,8 @@ export interface InflectionNode {
 const STORE_NAME = 'inflection_nodes';
 
 let currentSystemState: SystemSnapshot = {
-  activeModule: 'vision',
-  uiMode: 'vision',
+  activeModule: 'perception',
+  uiMode: 'perception',
   cognitiveLoad: 'low',
   humanVeto: false,
   timestamp: Date.now(),
@@ -56,8 +56,8 @@ function snapshotFromDecision(decision: Decision, suppliedState?: Partial<System
     ? decisionValue.systemState
     : undefined;
   const snapshot = {
-    activeModule: 'vision',
-    uiMode: 'vision',
+    activeModule: 'perception',
+    uiMode: 'perception',
     cognitiveLoad: 'low',
     humanVeto: false,
     timestamp: Date.now(),

@@ -51,7 +51,7 @@ interface ServerState {
 }
 
 const state: ServerState = {
-  activeModule: 'vision',
+  activeModule: 'perception',
   voiceEnabled: true,
   humanVeto: false,
   powerMode: 'normal',
@@ -93,8 +93,8 @@ type Handler = (msg: TCREIMessage) => Promise<unknown>;
 
 const handlers: Record<string, Handler> = {
   'command:process': async (msg) => {
-    if (state.activeModule === 'vision' && !serverPluginRegistry.isActive('vision')) {
-      throw new Error('Vision plugin is not active');
+    if (state.activeModule === 'perception' && !serverPluginRegistry.isActive('perception')) {
+      throw new Error('Perception plugin is not active');
     }
     const command = (msg.payload.command as string) ?? '';
     const perceptionSummary = (msg.payload.perception as string) ?? 'Sin percepcion activa';

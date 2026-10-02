@@ -2,7 +2,7 @@
 
 > Cuando todo lo demas se apaga, Sentra Core sigue ahi.
 
-## Vision General
+## Perception General
 
 Sentra Core v4.0.0_BIO adopta una arquitectura de dos capas:
 
@@ -39,7 +39,7 @@ Sentra Core v4.0.0_BIO adopta una arquitectura de dos capas:
 
 | Modulo | Responsabilidad |
 |--------|----------------|
-| PerceptionEngine | Vision, audio, IMU, STF, GPS — procesamiento de percepcion |
+| PerceptionEngine | Perception, audio, IMU, STF, GPS — procesamiento de percepcion |
 | MoralNode | Filtro etico (4 reglas inquebrantables) |
 | EVOLIS | Hash chain SHA-256 + firmas ECDSA P-256 |
 | BioSoftwareInterface | Inferencia activa, placebos, reencuadre, coherencia cardiaca |
@@ -125,7 +125,7 @@ frontend/
       evidence_chain_view.dart   Vista de cadena EVOLIS
       guardian_view.dart         Vista del guardian bacteriano
     screens/
-      vision_screen.dart         Modo vision
+      perception_screen.dart         Modo perception
       bio_screen.dart            Modo bio
       evidence_screen.dart       Modo evidencia
       learning_screen.dart       Modo aprendizaje
@@ -168,7 +168,7 @@ frontend/
 ```json
 {
   "type": "command | query | event | response | error",
-  "module": "vision | bio | evidencia | ...",
+  "module": "perception | bio | evidencia | ...",
   "action": "process | start_session | stop_session | verify | ...",
   "payload": { ... },
   "timestamp": 1694123456789,
@@ -190,7 +190,7 @@ frontend/
 
 | Event | Descripcion |
 |-------|-------------|
-| `perception.update` | Nuevos datos de percepcion (vision, sensores) |
+| `perception.update` | Nuevos datos de percepcion (perception, sensores) |
 | `bio.tick` | Actualizacion de sesion bio (coherencia, ciclos, reencuadre) |
 | `bio.session_complete` | Sesion bio completada |
 | `guardian.alert` | Nueva alerta del guardian |
@@ -226,7 +226,7 @@ frontend/
 ## 6. Preparacion para Verticales
 
 - **Sentinel**: Modo de seguridad y monitoreo con sensores + EVOLIS + Guardian
-- **Vision**: Asistencia visual con deteccion offline + descripcion por voz
+- **Perception**: Asistencia visual con deteccion offline + descripcion por voz
 
 Ambas verticales reutilizan el motor completo via la API server.
 

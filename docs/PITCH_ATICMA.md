@@ -45,7 +45,7 @@ Necesitamos tecnología que funcione cuando todo lo demás se apaga.
 
 ## Slide 4: Validación Local
 
-- **UMADESCA** (Unión Marplatense de Discapacidad Visual): Usuarios reales de Mar del Plata probando Sentra Visión.
+- **UMADESCA** (Unión Marplatense de Discapacidad Visual): Usuarios reales de Mar del Plata probando Sentra Percepción.
   - Detección de objetos offline con descripción por voz
   - Interfaz accesible (TalkBack, VoiceOver, NVDA)
   - Funciona sin internet — crítica para usuarios que no pueden depender de la nube
@@ -60,7 +60,7 @@ Necesitamos tecnología que funcione cuando todo lo demás se apaga.
 
 | Vertical | Descripción | Impacto local |
 |----------|-------------|---------------|
-| **Sentra Visión** | Asistencia visual para ciegos | Accesibilidad — UMADESCA |
+| **Sentra Percepción** | Asistencia visual para ciegos | Accesibilidad — UMADESCA |
 | **Sentinel** | Seguridad y monitoreo | Protección de PYMES y hogares |
 | **EVOLIS** | Trazabilidad inalterable | Auditoría, compliance, forense |
 | **ZION** | Domótica soberana | Hogares sin dependencia de nube |
@@ -90,7 +90,7 @@ Necesitamos tecnología que funcione cuando todo lo demás se apaga.
 **Accesibilidad**
 - 2.2B personas con discapacidad visual global
 - En Argentina, 500K+ personas con discapacidad visual
-- Sentra Visión funciona sin internet — donde más se necesita
+- Sentra Percepción funciona sin internet — donde más se necesita
 
 **Soberanía tecnológica**
 - Reducción de dependencia de proveedores extranjeros
@@ -110,7 +110,7 @@ Necesitamos tecnología que funcione cuando todo lo demás se apaga.
 
 ## Slide 8: Equipo
 
-**Fundador**: Marplatense. Desarrollador con visión técnica y estratégica.
+**Fundador**: Marplatense. Desarrollador con percepción técnica y estratégica.
 
 - Arquitectura completa diseñada e implementada (14 módulos, 9 modos, 6 verticales)
 - Validación con usuarios reales locales (UMADESCA)

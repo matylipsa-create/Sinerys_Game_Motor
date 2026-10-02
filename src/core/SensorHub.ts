@@ -1,7 +1,7 @@
 /**
  * SensorHub — Hub centralizado de sensores para SentraCore v4.2.0
  *
- * Unifica todos los tipos de sensor (ambientales, movimiento, visión,
+ * Unifica todos los tipos de sensor (ambientales, movimiento, percepción,
  * audio, contacto, gas, flujo) bajo una interfaz común. Cada sensor se
  * registra, publica lecturas y notifica a los suscriptores.
  */
@@ -13,7 +13,7 @@
 export type SensorCategory =
   | "ambient"
   | "motion"
-  | "vision"
+  | "perception"
   | "audio"
   | "contact"
   | "gas"
@@ -71,7 +71,7 @@ export interface MotionReading {
   magnitude: number;
 }
 
-export interface VisionReading {
+export interface PerceptionReading {
   objectsDetected: number;
   labels: string[];
   motionDetected: boolean;
@@ -119,7 +119,7 @@ export interface LocationReading {
 export type TypedReading =
   | { category: "ambient"; value: AmbientReading }
   | { category: "motion"; value: MotionReading }
-  | { category: "vision"; value: VisionReading }
+  | { category: "perception"; value: PerceptionReading }
   | { category: "audio"; value: AudioReading }
   | { category: "contact"; value: ContactReading }
   | { category: "gas"; value: GasReading }
