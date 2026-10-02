@@ -15,7 +15,7 @@ export function ParadoxPlayground() {
   const [gameState, setGameState] = useState<PlayerState>(() => globalOrchestrator.getState());
   const [events, setEvents] = useState<TacticalEvent[]>(() => globalOrchestrator.getEvents());
   const [activeCrises, setActiveCrises] = useState<FactionCrisis[]>(() => globalOrchestrator.getActiveCrises());
-  const [logMessage, setLogMessage] = useState('SENTRA CORE ONLINE. TACTICAL STATE SYNCHRONIZED.');
+  const [logMessage, setLogMessage] = useState('PARADOX BOOT // STATION 07. AIRLOCK SEAL FAILURE DETECTED.');
 
   useEffect(() => {
     bridge.connect();
@@ -30,6 +30,19 @@ export function ParadoxPlayground() {
       unsubscribe();
       bridge.disconnect();
     };
+  }, []);
+
+  useEffect(() => {
+    const tickTimer = window.setInterval(() => {
+      const nextState = globalOrchestrator.tickSurvival();
+      setGameState(nextState);
+      setEvents(globalOrchestrator.getEvents());
+      setLogMessage(nextState.survival.status === 'FAILED'
+        ? 'SUIT FAILURE // CYCLE TERMINATED'
+        : `SUIT TICK ${nextState.survival.ticksSurvived} // LIFE SUPPORT ACTIVE`);
+      if (nextState.survival.status === 'FAILED') window.clearInterval(tickTimer);
+    }, 5000);
+    return () => window.clearInterval(tickTimer);
   }, []);
 
   const refresh = (message: string) => {
@@ -86,14 +99,34 @@ export function ParadoxPlayground() {
     if (globalOrchestrator.resolveCrisis(crisisId)) refresh('CRISIS // RESOLUTION REGISTERED');
   };
 
+  const handleOxygenRefill = () => {
+    const success = globalOrchestrator.refillOxygen();
+    refresh(success ? 'SUIT SYSTEMS // OXYGEN RESERVE +30%' : 'SUIT SYSTEMS // OXYGEN REFILL UNAVAILABLE');
+  };
+
+  const handleMutagenDose = () => {
+    const success = globalOrchestrator.useMutagenCharge();
+    refresh(success ? 'SUIT SYSTEMS // RADIATION BUFFER RESTORED' : 'SUIT SYSTEMS // NO MUTAGEN DOSE AVAILABLE');
+  };
+
+  const handleMutagenSupply = () => {
+    const success = globalOrchestrator.purchaseMutagenCharges();
+    refresh(success ? 'SUIT SYSTEMS // TWO MUTAGEN DOSES ACQUIRED' : 'SUIT SYSTEMS // INSUFFICIENT MOB SCORE');
+  };
+
+  const handleRestartRun = () => {
+    globalOrchestrator.restartSurvivalRun();
+    refresh('PARADOX BOOT // NEW SUIT CYCLE INITIALIZED');
+  };
+
   return (
     <main className={`paradox-shell${gameState.mantisFiltersActive ? ' mantis-active' : ''}`}>
       <header className="paradox-header">
         <div>
-          <p className="paradox-kicker">CONQUER OF DARKNESS / FIELD SYSTEMS</p>
-          <h1>PARADOX <span>//</span> ORCHESTRATOR</h1>
+          <p className="paradox-kicker">CONQUER OF DARKNESS / STATION 07 / ENGINEERING TERMINAL</p>
+          <h1>PARADOX <span>//</span> LIFE SUPPORT</h1>
         </div>
-        <div className="paradox-status"><i /> OFFLINE-READY <span>STATE SAVED</span></div>
+        <div className={`paradox-status${gameState.survival.status === 'FAILED' ? ' status-failed' : ''}`}><i /> {gameState.survival.status === 'FAILED' ? 'SUIT FAILURE' : 'LIFE SUPPORT ACTIVE'} <span>LOCAL STATE SAVED</span></div>
       </header>
 
       <section className="paradox-overview" aria-label="Tactical state">
@@ -110,6 +143,40 @@ export function ParadoxPlayground() {
           <article><span className="paradox-label">LIVING AMMO</span><strong>{String(gameState.livingAmmoCount).padStart(2, '0')}</strong><small>ROUNDS AVAILABLE</small></article>
           <article><span className="paradox-label">MUTAGENS</span><strong>{String(gameState.mutagensOwned.length).padStart(2, '0')}</strong><small>{gameState.mutagensOwned[gameState.mutagensOwned.length - 1]?.replace(/_/g, ' ')}</small></article>
           <article><span className="paradox-label">CAMERA</span><strong className="camera-value">{gameState.activeCameraMode.replace(/_/g, ' ')}</strong><small>MANTIS {gameState.mantisFiltersActive ? 'ACTIVE' : 'STANDBY'}</small></article>
+        </div>
+      </section>
+
+      <section className={`paradox-survival${gameState.survival.status === 'FAILED' ? ' survival-failed' : ''}`} aria-labelledby="survival-title">
+        <div className="paradox-survival-heading">
+          <div><span>00 / SUIT DIAGNOSTICS</span><h2 id="survival-title">Survival systems</h2></div>
+          <span className="survival-tick">CYCLE {String(gameState.survival.ticksSurvived).padStart(4, '0')}</span>
+        </div>
+        <div className="survival-readouts">
+          <article className="survival-readout oxygen-readout">
+            <div><span>OXYGEN RESERVE</span><strong>{Math.ceil(gameState.survival.oxygen)}%</strong></div>
+            <progress max="100" value={gameState.survival.oxygen} aria-label={`Oxygen reserve ${Math.ceil(gameState.survival.oxygen)} percent`} />
+            <small>CONSUMPTION / TICK: 1.5%</small>
+          </article>
+          <article className="survival-readout radiation-readout">
+            <div><span>RADIATION LOAD</span><strong>{Math.ceil(gameState.survival.radiation)}%</strong></div>
+            <progress max="100" value={gameState.survival.radiation} aria-label={`Radiation load ${Math.ceil(gameState.survival.radiation)} percent`} />
+            <small>EXPOSURE / TICK: 0.8%</small>
+          </article>
+          <article className="survival-readout mutagen-readout">
+            <div><span>MUTAGEN DOSES</span><strong>{String(gameState.survival.mutagenCharges).padStart(2, '0')}</strong></div>
+            <small>BUFFER / DOSE: −28% RAD</small>
+          </article>
+        </div>
+        <div className="survival-controls">
+          {gameState.survival.status === 'FAILED' ? (
+            <button type="button" className="restart-run" onClick={handleRestartRun}>Restart suit cycle</button>
+          ) : (
+            <>
+              <button type="button" onClick={handleOxygenRefill} disabled={gameState.mobScore < 90 || gameState.survival.oxygen >= 100}>Refill oxygen <small>90 SCORE / +30%</small></button>
+              <button type="button" onClick={handleMutagenDose} disabled={gameState.survival.mutagenCharges < 1 || gameState.survival.radiation <= 0}>Apply mutagen <small>1 DOSE / −28% RAD</small></button>
+              <button type="button" onClick={handleMutagenSupply} disabled={gameState.mobScore < 180}>Acquire doses <small>180 SCORE / +2</small></button>
+            </>
+          )}
         </div>
       </section>
 

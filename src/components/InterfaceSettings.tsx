@@ -10,9 +10,9 @@ type SentraTheme = 'tactical' | 'cyberpunk' | 'field';
 
 const THEME_KEY = 'sentra-pwa-theme';
 const THEMES: { id: SentraTheme; label: string }[] = [
-  { id: 'tactical', label: 'Verde táctico' },
-  { id: 'cyberpunk', label: 'Azul ciberpunk' },
-  { id: 'field', label: 'Alto contraste' },
+  { id: 'tactical', label: 'Panel industrial' },
+  { id: 'cyberpunk', label: 'Señal de emergencia' },
+  { id: 'field', label: 'Visor del traje' },
 ];
 
 function getStoredTheme(): SentraTheme {
@@ -74,8 +74,8 @@ export function InterfaceSettings() {
   };
 
   return (
-    <aside aria-label="Ajustes rápidos de interfaz" className="fixed left-3 top-3 z-[10001] flex max-w-[calc(100vw-7rem)] items-center gap-2 border border-[var(--sentra-accent)]/30 bg-[#05090a]/95 p-1.5 font-mono text-[10px] shadow-lg backdrop-blur sm:left-4 sm:top-4">
-      <label className="sr-only" htmlFor="sentra-theme-select">Tema visual</label>
+    <aside aria-label="Sistemas de la nave" className="fixed left-3 top-3 z-[10001] flex max-w-[calc(100vw-7rem)] items-center gap-2 border border-[var(--sentra-accent)]/30 bg-[#05090a]/95 p-1.5 font-mono text-[10px] shadow-lg backdrop-blur sm:left-4 sm:top-4">
+      <label className="sr-only" htmlFor="sentra-theme-select">Perfil del visor</label>
       <select
         id="sentra-theme-select"
         value={theme}
@@ -91,14 +91,14 @@ export function InterfaceSettings() {
           onChange={(event) => handleAudioChange(event.target.checked)}
           className="h-4 w-4 accent-[var(--sentra-accent)]"
         />
-        Audio
+        Señales
       </label>
       <button type="button" onClick={() => setShowApiAccess((open) => !open)} aria-expanded={showApiAccess} aria-controls="sentra-api-access" className="min-h-9 border border-[var(--sentra-accent)]/25 px-2 text-[10px] text-[var(--sentra-text)] hover:bg-white/5">
-        API {hasApiToken ? '●' : '○'}
+        BUS {hasApiToken ? '●' : '○'}
       </button>
       {showApiAccess && (
         <form id="sentra-api-access" onSubmit={saveApiToken} className="absolute left-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] border border-[var(--sentra-accent)]/35 bg-[#05090a] p-3 font-mono text-[10px] shadow-xl">
-          <label htmlFor="sentra-api-token" className="block text-[var(--sentra-text)]">Token de acceso al backend</label>
+          <label htmlFor="sentra-api-token" className="block text-[var(--sentra-text)]">Credencial del bus de mando</label>
           <input id="sentra-api-token" type="password" autoComplete="current-password" value={apiToken} onChange={(event) => setApiTokenValue(event.target.value)} className="mt-2 min-h-10 w-full border border-[var(--sentra-accent)]/25 bg-black px-2 text-[var(--sentra-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--sentra-accent)]" />
           <div className="mt-2 flex justify-between gap-2">
             <button type="submit" disabled={!apiToken.trim()} className="min-h-9 border border-[var(--sentra-accent)]/40 px-3 text-[var(--sentra-text)] disabled:opacity-40">Conectar</button>

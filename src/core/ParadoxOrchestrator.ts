@@ -3,6 +3,15 @@ import { bridge, type OrchestratorCommand } from './OrchestratorBridge';
 import { ParadoxStorage } from './ParadoxStorage';
 
 export type CameraMode = 'ISOMETRIC' | 'FIRST_PERSON' | 'SIDE_SCROLLER';
+export type SurvivalStatus = 'ACTIVE' | 'FAILED';
+
+export interface SurvivalState {
+  oxygen: number;
+  radiation: number;
+  mutagenCharges: number;
+  ticksSurvived: number;
+  status: SurvivalStatus;
+}
 
 export interface PlayerState {
   mobScore: number;
@@ -12,6 +21,7 @@ export interface PlayerState {
   realityTier: number;
   activeCameraMode: CameraMode;
   mantisFiltersActive: boolean;
+  survival: SurvivalState;
 }
 
 export interface TacticalEvent {
@@ -30,6 +40,13 @@ const INITIAL_STATE: PlayerState = {
   realityTier: 0,
   activeCameraMode: 'ISOMETRIC',
   mantisFiltersActive: false,
+  survival: {
+    oxygen: 100,
+    radiation: 5,
+    mutagenCharges: 3,
+    ticksSurvived: 0,
+    status: 'ACTIVE',
+  },
 };
 
 export class ParadoxOrchestratorEngine {
@@ -54,13 +71,14 @@ export class ParadoxOrchestratorEngine {
   }
 
   public registerMobKill(scoreGained: number): PlayerState {
-    if (!Number.isFinite(scoreGained) || scoreGained <= 0) return this.getState();
+    if (this.state.survival.status === 'FAILED' || !Number.isFinite(scoreGained) || scoreGained <= 0) return this.getState();
     this.state.mobScore += Math.floor(scoreGained);
     this.recordEvent('SYSTEM', `Mob eliminated. +${Math.floor(scoreGained)} mob score.`);
     return this.getState();
   }
 
   public visitShelter(): { mutated: boolean; state: PlayerState } {
+    if (this.state.survival.status === 'FAILED') return { mutated: false, state: this.getState() };
     this.state.shelterVisits += 1;
     const mutated = this.state.shelterVisits % 4 === 0;
     if (mutated) this.state.realityTier += 1;
@@ -99,7 +117,7 @@ export class ParadoxOrchestratorEngine {
   }
 
   public purchaseLivingAmmo(cost: number): boolean {
-    if (!Number.isFinite(cost) || cost < 0 || this.state.mobScore < cost) return false;
+    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0 || this.state.mobScore < cost) return false;
     this.state.mobScore -= cost;
     this.state.livingAmmoCount += 10;
     this.recordEvent('SYSTEM', 'Living ammo acquired. +10 rounds.');
@@ -107,12 +125,81 @@ export class ParadoxOrchestratorEngine {
   }
 
   public purchaseMutagen(mutagenId: string, cost: number): boolean {
-    if (!mutagenId.trim() || !Number.isFinite(cost) || cost < 0
+    if (this.state.survival.status === 'FAILED' || !mutagenId.trim() || !Number.isFinite(cost) || cost < 0
       || this.state.mobScore < cost || this.state.mutagensOwned.includes(mutagenId)) return false;
     this.state.mobScore -= cost;
     this.state.mutagensOwned = [...this.state.mutagensOwned, mutagenId];
     this.recordEvent('SYSTEM', `Mutagen acquired: ${mutagenId}.`);
     return true;
+  }
+
+  public tickSurvival(): PlayerState {
+    if (this.state.survival.status === 'FAILED') return this.getState();
+    const survival = this.state.survival;
+    survival.ticksSurvived += 1;
+    survival.oxygen = Math.max(0, survival.oxygen - 1.5);
+    survival.radiation = Math.min(100, survival.radiation + 0.8);
+    bridge.sendCommand({
+      type: 'UPDATE_PERCEPTION',
+      payload: {
+        survival: {
+          oxygen: survival.oxygen,
+          radiation: survival.radiation,
+          mutagenCharges: survival.mutagenCharges,
+          status: survival.status,
+        },
+      },
+    });
+
+    if (survival.oxygen <= 0 || survival.radiation >= 100) {
+      survival.status = 'FAILED';
+      this.recordEvent('CRISIS', survival.oxygen <= 0
+        ? 'SUIT FAILURE: oxygen reserves depleted.'
+        : 'SUIT FAILURE: radiation exposure exceeded safe limits.');
+    } else if (survival.ticksSurvived % 6 === 0) {
+      this.recordEvent('SYSTEM', `Suit check ${survival.ticksSurvived}: O2 ${Math.ceil(survival.oxygen)}%, RAD ${Math.ceil(survival.radiation)}%.`);
+    } else {
+      this.persist();
+    }
+    return this.getState();
+  }
+
+  public refillOxygen(cost = 90): boolean {
+    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0
+      || this.state.mobScore < cost || this.state.survival.oxygen >= 100) return false;
+    this.state.mobScore -= cost;
+    this.state.survival.oxygen = Math.min(100, this.state.survival.oxygen + 30);
+    this.recordEvent('SYSTEM', 'Suit oxygen reserve replenished by 30%.');
+    return true;
+  }
+
+  public useMutagenCharge(): boolean {
+    const survival = this.state.survival;
+    if (survival.status === 'FAILED' || survival.mutagenCharges <= 0 || survival.radiation <= 0) return false;
+    survival.mutagenCharges -= 1;
+    survival.radiation = Math.max(0, survival.radiation - 28);
+    this.recordEvent('SYSTEM', 'Mutagen dose stabilized radiation exposure.');
+    return true;
+  }
+
+  public purchaseMutagenCharges(cost = 180): boolean {
+    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0
+      || this.state.mobScore < cost) return false;
+    this.state.mobScore -= cost;
+    this.state.survival.mutagenCharges += 2;
+    this.recordEvent('SYSTEM', 'Two mutagen doses added to suit inventory.');
+    return true;
+  }
+
+  public restartSurvivalRun(): void {
+    this.state.survival = {
+      oxygen: 100,
+      radiation: 5,
+      mutagenCharges: 3,
+      ticksSurvived: 0,
+      status: 'ACTIVE',
+    };
+    this.recordEvent('SYSTEM', 'New suit cycle initialized.');
   }
 
   public toggleCameraMode(): CameraMode {
@@ -190,7 +277,11 @@ export class ParadoxOrchestratorEngine {
   }
 
   public getState(): PlayerState {
-    return { ...this.state, mutagensOwned: [...this.state.mutagensOwned] };
+    return {
+      ...this.state,
+      mutagensOwned: [...this.state.mutagensOwned],
+      survival: { ...this.state.survival },
+    };
   }
 
   public getEvents(): TacticalEvent[] {

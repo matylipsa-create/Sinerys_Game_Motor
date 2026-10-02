@@ -23,6 +23,26 @@ function isPlayerState(value: unknown): value is PlayerState {
     && typeof state.mantisFiltersActive === 'boolean';
 }
 
+function normalizePlayerState(state: PlayerState): PlayerState {
+  const survival = state.survival;
+  const isValidSurvival = !!survival
+    && Number.isFinite(survival.oxygen) && survival.oxygen >= 0 && survival.oxygen <= 100
+    && Number.isFinite(survival.radiation) && survival.radiation >= 0 && survival.radiation <= 100
+    && Number.isInteger(survival.mutagenCharges) && survival.mutagenCharges >= 0
+    && Number.isInteger(survival.ticksSurvived) && survival.ticksSurvived >= 0
+    && ['ACTIVE', 'FAILED'].includes(survival.status);
+  return {
+    ...state,
+    survival: isValidSurvival ? { ...survival } : {
+      oxygen: 100,
+      radiation: 5,
+      mutagenCharges: 3,
+      ticksSurvived: 0,
+      status: 'ACTIVE',
+    },
+  };
+}
+
 function isTacticalEvent(value: unknown): value is TacticalEvent {
   if (!value || typeof value !== 'object') return false;
   const event = value as Partial<TacticalEvent>;
@@ -53,7 +73,10 @@ export class ParadoxStorage {
       const save = parsed as Partial<ParadoxSaveData>;
       if (!isPlayerState(save.state)) return null;
       return {
-        state: { ...save.state, mutagensOwned: [...save.state.mutagensOwned] },
+        state: {
+          ...normalizePlayerState(save.state),
+          mutagensOwned: [...save.state.mutagensOwned],
+        },
         events: Array.isArray(save.events) ? save.events.filter(isTacticalEvent).slice(0, 20) : [],
         crises: Array.isArray(save.crises) ? save.crises.filter(isFactionCrisis).slice(0, 100) : [],
         timestamp: Number.isFinite(save.timestamp) ? Number(save.timestamp) : 0,
@@ -76,7 +99,7 @@ export class ParadoxStorage {
     try {
       if (!isPlayerState(state)) return;
       const save: ParadoxSaveData = {
-        state: { ...state, mutagensOwned: [...state.mutagensOwned] },
+        state: { ...normalizePlayerState(state), mutagensOwned: [...state.mutagensOwned] },
         events: events.filter(isTacticalEvent).slice(0, 20),
         crises: crises.filter(isFactionCrisis).slice(0, 100),
         timestamp: Date.now(),
