@@ -1,0 +1,100 @@
+.paradox-shell {
+  --paradox-ink: #121a17;
+  --paradox-paper: #e8e9df;
+  --paradox-dim: #a3ada3;
+  --paradox-line: rgba(207, 221, 205, .18);
+  --paradox-lime: #d2f36b;
+  min-height: calc(100vh - 64px);
+  padding: clamp(1rem, 3vw, 2.75rem) clamp(1rem, 5vw, 5rem) 1.25rem;
+  color: var(--paradox-paper);
+  background-color: #111814;
+  background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px), radial-gradient(ellipse at 70% 8%, #344237 0, transparent 42%);
+  background-size: 32px 32px, 32px 32px, auto;
+  font-family: "Arial Narrow", "Franklin Gothic Medium", sans-serif;
+}
+
+.paradox-shell.mantis-active { box-shadow: inset 0 0 0 2px #c8ff70, inset 0 0 100px rgba(190, 255, 93, .11); }
+.paradox-shell.mantis-active > :not(.paradox-console) { filter: hue-rotate(28deg) contrast(1.08); }
+.paradox-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--paradox-line); }
+.paradox-kicker, .paradox-label, .paradox-subtle, .paradox-panel-heading > span { color: var(--paradox-dim); font-family: ui-monospace, Consolas, monospace; font-size: .68rem; letter-spacing: .08em; }
+.paradox-kicker { margin: 0 0 .5rem; }
+.paradox-header h1 { margin: 0; font-size: clamp(1.3rem, 3vw, 2.25rem); line-height: 1; letter-spacing: .03em; }
+.paradox-header h1 span { color: var(--paradox-lime); }
+.paradox-status { display: flex; align-items: center; gap: .55rem; color: var(--paradox-lime); font: 700 .7rem ui-monospace, Consolas, monospace; }
+.paradox-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--paradox-lime); box-shadow: 0 0 12px var(--paradox-lime); }
+.paradox-status span { margin-left: .5rem; padding-left: .75rem; border-left: 1px solid var(--paradox-line); color: var(--paradox-dim); }
+.paradox-overview { display: grid; grid-template-columns: minmax(180px, .72fr) 2.28fr; margin-top: 1.5rem; border: 1px solid var(--paradox-line); background: rgba(14, 20, 16, .77); }
+.paradox-reality { display: flex; flex-direction: column; justify-content: center; min-height: 185px; padding: 1.4rem; border-right: 1px solid var(--paradox-line); background: linear-gradient(140deg, rgba(210,243,107,.1), transparent 70%); }
+.paradox-reality strong { margin: .35rem 0; color: var(--paradox-lime); font: 500 4.2rem/1 ui-monospace, Consolas, monospace; }
+.paradox-subtle { font-size: .62rem; }
+.paradox-cycle { display: flex; gap: 5px; margin-top: 1rem; }
+.paradox-cycle i { height: 3px; flex: 1; background: rgba(210,243,107,.16); }
+.paradox-cycle i.filled { background: var(--paradox-lime); }
+.paradox-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.paradox-metrics article { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: .5rem; padding: 1rem; border-right: 1px solid var(--paradox-line); }
+.paradox-metrics article:last-child { border-right: 0; }
+.paradox-metrics strong { overflow-wrap: anywhere; color: var(--paradox-paper); font: 500 clamp(1.3rem, 2.6vw, 2rem)/1.1 ui-monospace, Consolas, monospace; }
+.paradox-metrics small { overflow: hidden; color: var(--paradox-dim); font: .6rem ui-monospace, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.paradox-metrics .camera-value { color: #f1a47d; font-size: clamp(.85rem, 1.4vw, 1.15rem); }
+.paradox-columns { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 1rem; margin-top: 1rem; }
+.paradox-panel { min-width: 0; border: 1px solid var(--paradox-line); background: rgba(18, 26, 22, .88); }
+.paradox-panel-heading { padding: 1rem 1rem .75rem; border-bottom: 1px solid var(--paradox-line); }
+.paradox-panel-heading h2 { margin: .35rem 0 0; font-size: 1.05rem; font-weight: 500; }
+.paradox-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.paradox-actions button { display: flex; min-height: 74px; align-items: center; gap: .7rem; padding: .8rem; border: 0; border-right: 1px solid var(--paradox-line); border-bottom: 1px solid var(--paradox-line); color: var(--paradox-paper); background: transparent; text-align: left; cursor: pointer; }
+.paradox-actions button:nth-child(2n) { border-right: 0; }
+.paradox-actions button:hover:not(:disabled), .paradox-actions button[aria-pressed="true"] { background: rgba(210,243,107,.08); }
+.paradox-actions button:disabled { opacity: .55; cursor: default; }
+.paradox-actions button > span:nth-child(2) { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: .25rem; font-size: .82rem; }
+.paradox-actions small { overflow: hidden; color: var(--paradox-dim); font: .57rem ui-monospace, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.action-index { align-self: flex-start; color: var(--paradox-dim); font: .65rem ui-monospace, Consolas, monospace; }
+.paradox-actions b { color: var(--paradox-lime); font: 500 1rem ui-monospace, Consolas, monospace; }
+.paradox-event-controls { display: flex; gap: .5rem; padding: .8rem; border-bottom: 1px solid var(--paradox-line); }
+.paradox-event-controls button { display: flex; min-height: 40px; flex: 1; align-items: center; justify-content: space-between; gap: .3rem; padding: .55rem .65rem; border: 1px solid var(--paradox-line); color: var(--paradox-paper); background: rgba(255,255,255,.025); font-size: .7rem; text-align: left; cursor: pointer; }
+.paradox-event-controls button:hover { border-color: var(--paradox-lime); }
+.paradox-event-controls button span { color: var(--paradox-lime); font-size: 1rem; }
+.paradox-feed { max-height: 298px; overflow-y: auto; margin: 0; padding: 0 1rem; list-style: none; }
+.paradox-feed li { display: grid; grid-template-columns: 65px 1fr auto; align-items: start; gap: .6rem; padding: .8rem 0; border-bottom: 1px solid var(--paradox-line); }
+.paradox-feed li:last-child { border-bottom: 0; }
+.event-tag { padding: .22rem .3rem; font: .58rem ui-monospace, Consolas, monospace; text-align: center; }
+.event-faction { color: #f1a47d; background: rgba(241,164,125,.12); }
+.event-crisis { color: #ff7878; background: rgba(255,120,120,.12); }
+.event-critical { color: #ff7878; background: rgba(255,120,120,.12); }
+.event-omega { color: #f1a47d; background: rgba(241,164,125,.16); }
+.event-system { color: var(--paradox-lime); background: rgba(210,243,107,.1); }
+.paradox-active-crises { max-height: 180px; overflow-y: auto; margin: 0; padding: 0 .8rem; list-style: none; border-bottom: 1px solid var(--paradox-line); }
+.paradox-active-crises li { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .7rem 0; border-bottom: 1px solid var(--paradox-line); }
+.paradox-active-crises li:last-child { border-bottom: 0; }
+.paradox-active-crises li > div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .35rem .5rem; min-width: 0; }
+.paradox-active-crises strong { overflow: hidden; color: var(--paradox-paper); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.paradox-active-crises p { grid-column: 1 / -1; margin: 0; color: var(--paradox-dim); font-size: .67rem; line-height: 1.35; }
+.paradox-active-crises button { min-height: 36px; flex: 0 0 auto; padding: .35rem .55rem; border: 1px solid var(--paradox-line); color: var(--paradox-lime); background: transparent; font-size: .65rem; cursor: pointer; }
+.paradox-active-crises button:hover { border-color: var(--paradox-lime); background: rgba(210,243,107,.08); }
+.paradox-feed p { margin: 0; color: #d5ddd4; font-size: .76rem; line-height: 1.4; }
+.paradox-feed time { color: var(--paradox-dim); font: .62rem ui-monospace, Consolas, monospace; }
+.paradox-feed .paradox-empty { display: block; padding: 1.3rem 0; color: var(--paradox-dim); font-size: .76rem; }
+.paradox-console { display: flex; align-items: center; gap: .8rem; margin-top: 1rem; padding: .8rem 1rem; border: 1px solid var(--paradox-line); background: rgba(7, 11, 8, .8); font: .62rem ui-monospace, Consolas, monospace; }
+.paradox-console > span:first-child { color: var(--paradox-lime); }
+.paradox-console p { flex: 1; margin: 0; color: #d5ddd4; }
+.paradox-console > span:last-child { color: var(--paradox-dim); }
+
+@media (max-width: 760px) {
+  .paradox-overview { grid-template-columns: 1fr; }
+  .paradox-reality { min-height: auto; border-right: 0; border-bottom: 1px solid var(--paradox-line); }
+  .paradox-reality strong { font-size: 3.3rem; }
+  .paradox-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paradox-metrics article:nth-child(2) { border-right: 0; }
+  .paradox-metrics article:nth-child(-n+2) { border-bottom: 1px solid var(--paradox-line); }
+  .paradox-columns { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .paradox-header { align-items: flex-start; flex-direction: column; }
+  .paradox-status span { display: none; }
+  .paradox-actions { grid-template-columns: 1fr; }
+  .paradox-actions button { border-right: 0; }
+  .paradox-event-controls { flex-direction: column; }
+  .paradox-feed li { grid-template-columns: 58px 1fr; }
+  .paradox-feed time { grid-column: 2; }
+  .paradox-console > span:last-child { display: none; }
+}

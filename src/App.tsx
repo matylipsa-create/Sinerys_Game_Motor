@@ -4,6 +4,7 @@ import { MasterEngineDashboard } from './components/MasterEngineDashboard';
 import { InterfaceSettings } from './components/InterfaceSettings';
 import { VisionScreen } from './components/VisionScreen';
 import { VisionOnboarding } from './components/VisionOnboarding';
+import { ParadoxPlayground } from './components/ParadoxPlayground';
 import BlindModeRoute from './components/BlindModeRoute';
 import { AppProvider } from './context/AppContext';
 
@@ -98,6 +99,23 @@ export default function App() {
     );
   }
 
+  if (route === '/paradox') {
+    return (
+      <>
+        <InterfaceSettings />
+        <nav aria-label="Navegación principal" className="relative z-[10000] flex flex-wrap justify-end gap-2 px-4 pt-4">
+          <button type="button" onClick={() => navigate('/core')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+            SENTRA CORE
+          </button>
+          <button type="button" onClick={() => navigate('/')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+            INICIO
+          </button>
+        </nav>
+        <ParadoxPlayground />
+      </>
+    );
+  }
+
   return (
     <>
       <InterfaceSettings />
@@ -107,6 +125,9 @@ export default function App() {
         </button>
         <button type="button" onClick={() => navigate('/core')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
           SENTRA CORE
+        </button>
+        <button type="button" onClick={() => navigate('/paradox')} className="min-h-11 rounded border border-[#d2f36b]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#d2f36b] hover:bg-[#d2f36b] hover:text-black">
+          PARADOX ORCHESTRATOR
         </button>
       </nav>
       <AppProvider><BlindModeRoute /></AppProvider>
