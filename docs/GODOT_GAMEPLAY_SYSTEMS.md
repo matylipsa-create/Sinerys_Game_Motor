@@ -283,6 +283,31 @@ entire Godot project stays within a 32 MiB VRAM budget or a frame-time target.
 Measure the Compatibility renderer on the actual GPU, especially with the
 outline pass and shadowed lights enabled.
 
+## MultiMesh point-cloud billboards
+
+`godot/shaders/point_toon_multimesh.gdshader` is the point/voxel-stamp variant;
+it is separate from the surface toon shader because it expands each source
+vertex into a camera-facing quad. Use a unit `QuadMesh` as the `MultiMesh.Mesh`,
+place each instance transform at the point center, and assign this shader via
+the quad's material. The vertex stage uses the instance model matrix only for
+the center, then expands along camera right/up in world space; point size is
+therefore a world-space diameter and does not inherit instance rotation/scale.
+Enable `use_instance_custom_size` only when MultiMesh custom data is enabled
+and its red channel contains a nonnegative size multiplier (zero hides the
+stamp). Use an opaque texture or alpha-scissor cutout with nearest filtering;
+the stamp is depth-writing and does not use alpha blending.
+
+The billboard normal faces the camera and the shader uses Godot's `light()`
+path, so the three quantized bands respond to scene lights and their
+attenuation/shadows rather than approximating light with `dot(NORMAL, VIEW)`.
+For predictable low-end cost, keep the number of affecting lights small,
+prefer one directional light, and disable shadow casting on the point-cloud
+MultiMesh. This produces a camera-facing lighting response, not a geometric
+voxel surface normal; use `pixel_toon_compat.gdshader` for actual voxel faces.
+Add the point material to `SentraShaderOrchestrator.ToonMaterials`: its
+`crisis_tension` uniform is updated through the same filtered crisis snapshot
+path, tinting mid-band light during critical states without per-frame updates.
+
 ## Shader orchestration, character telemetry and voxel streaming
 
 Add `SentraShaderOrchestrator` to the gameplay root. Set `SentraCorePath`,
