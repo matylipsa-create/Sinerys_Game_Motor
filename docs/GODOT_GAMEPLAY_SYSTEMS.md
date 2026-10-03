@@ -25,6 +25,14 @@ SentraCoreEngine ──> CrisisThreatDirector ──> CrisisSnapshot / directive
 DungeonStreamingService
   └─ deterministic room graph + spawn plan on WorkerThreadPool
        └─ main-thread signal/snapshot ──> project renderer adapter
+
+SentraFastMath
+  ├─ bounded trig LUT + analytic ballistic motion
+  └─ integer-cell DDA query over caller-owned voxel occupancy
+
+Camera3D
+  └─ MantisVisionPostProcess (single full-screen quad)
+       └─ color/depth contours + tension-driven grading
 ```
 
 ## Scene wiring
@@ -154,6 +162,66 @@ second. Performance warnings are throttled to one every five seconds. The
 bridge ping uses a sequence echo and a local monotonic clock; it does not
 compare browser and Godot clock origins.
 
+## Lightweight math and voxel queries
+
+`SentraFastMath` is a pure utility layer, not a replacement for Godot's
+authoritative rigid-body solver. `SinLut` and `SinCosLut` interpolate a
+startup-built 4096-entry periodic table; use these for bounded visual,
+procedural, or steering calculations where measured call volume justifies
+them. `FastNormalizeOrZero` uses a bit-level inverse-square-root estimate and
+one Newton step; it is for approximate steering/visual vectors only.
+`NormalizeOrZero` remains available when exact normalization semantics are
+needed. Ballistic position/velocity are closed-form constant-acceleration
+evaluations and do not require per-step integration.
+
+`RaycastVoxels` traverses a dense, caller-owned `byte[]` occupancy grid with a
+3D DDA. The flat layout is X-fastest:
+`x + sizeX * (y + sizeY * z)`. Nonzero cells are solid, grid coordinates are
+offset by `gridOrigin`, and the returned hit contains the cell, entry normal,
+and distance. The method bounds-checks dimensions, buffer length and finite
+inputs, and performs no per-call managed allocation. Keep the occupancy buffer
+stable for the duration of a call; do not mutate it concurrently. This query
+is useful for voxel broadphase/gameplay and deterministic procedural checks,
+not for moving-body contacts, rigid-body response, or authoritative scene
+collision.
+
+`DiffuseDensity6` performs one fixed-point, six-neighbor density update into a
+separate caller-owned byte buffer. `centerRetention` is in `[0, 255]`: 255
+preserves the current cell; 0 replaces it with the rounded mean of valid
+face-adjacent cells. Swap source/destination buffers between iterations for
+stable, deterministic passes; the method rejects aliasing and undersized
+buffers and does not clear or allocate either buffer.
+
+The LUT, linear interpolation and grid query trade computation for bounded
+memory/access costs; they are not automatically faster than native Godot math
+or physics at small call counts. No universal sub-millisecond CPU guarantee
+is possible without a target device, workload and profiler capture. Benchmark
+representative release builds and retain the engine physics path wherever its
+solver semantics are required.
+
+## Mantis Vision post-process
+
+Add `MantisVisionPostProcess.gd` as a child of the active `Camera3D`, and set
+`crisis_director_path` to the `CrisisThreatDirector` node path. The script
+builds a full-screen `QuadMesh`, loads
+`godot/shaders/mantis_vision_post_process.gdshader` when the repository is the
+project root (or `shaders/mantis_vision_post_process.gdshader` when `godot/`
+is the project root), and subscribes to crisis tension snapshots. Set corruption separately with
+`set_critical_state(tension, corruption)` when the world/player corruption
+changes. Call `trigger_impact(screen_uv, intensity)` with normalized viewport
+coordinates to briefly emphasize an impact; `set_quality()` adjusts contour
+strengths for quality tiers.
+
+The shader uses four neighboring color samples and three linearized depth
+samples to produce perceptual and depth contours, then applies a restrained
+shadow/midtone/highlight grade. Tension and corruption bias contours toward a
+danger palette; impact rings are aspect-ratio corrected. It runs on the GPU,
+so profile GPU frame time separately from CPU frame time. For low-end targets,
+reduce output resolution or disable depth contours; the post-process is
+optional and does not alter physics/collision layers. Scene entities that need
+independent status silhouettes should use a dedicated mask/material pass
+rather than treating screen-wide tension as per-entity data.
+
 ## Deterministic dungeon contract
 
 `DungeonGenerationRequest` contains seed, room count, corruption, current
@@ -185,8 +253,9 @@ func _on_layout_ready(_generation: int, _rooms: int, _connections: int) -> void:
 
 ## Validation boundary
 
-These scripts require a Godot 4 .NET project and editor/runtime for API and
-scene validation. The repository currently does not include `project.godot`,
-scene files, a C# project file, or a Godot executable. Collision layers, input
-actions, node paths, physics occlusion and renderer consumption still need to
-be configured and verified in the host project.
+These scripts require a Godot 4 .NET project and editor/runtime for API,
+shader and scene validation. The repository currently does not include
+`project.godot`, scene files, a C# project file, or a Godot executable.
+Collision layers, input actions, node paths, physics occlusion, post-process
+camera attachment and renderer consumption still need to be configured and
+verified in the host project.
