@@ -20,8 +20,8 @@ function roundToTwoDecimals(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-export class MultiversalDriftManager {
-  private currentReality: ParallelReality = {
+export function createInitialReality(): ParallelReality {
+  return {
     realityId: 'prime-00',
     universeName: 'Universo Observable Base (Red Cósmica Original)',
     filamentResonance: 50,
@@ -32,17 +32,28 @@ export class MultiversalDriftManager {
     },
     anomalyDescription: 'Leyes físicas estables dentro del borde observable.',
   };
-  private readonly shiftHistory: ParallelReality[] = [];
-  private nextRealityId = 0;
+}
 
+/**
+ * Stateless reality-generation rules. GameEngineCore owns the active reality
+ * and its history.
+ */
+export class MultiversalDriftManager {
   constructor(private readonly random: () => number = Math.random) {}
 
-  breachObservableEdge(targetDimensionName: string): ParallelReality {
+  breachObservableEdge(
+    targetDimensionName: string,
+    currentReality: ParallelReality,
+    nextRealityId: number,
+  ): { currentReality: ParallelReality; previousReality: ParallelReality } {
     const universeName = targetDimensionName.trim();
     if (!universeName) throw new Error('A destination dimension name is required.');
+    if (!Number.isInteger(nextRealityId) || nextRealityId < 0) {
+      throw new Error('Reality sequence must be a non-negative integer.');
+    }
 
     const newReality: ParallelReality = {
-      realityId: `reality-${Date.now().toString(36)}-${(this.nextRealityId++).toString(36)}`,
+      realityId: `reality-${nextRealityId.toString(36)}`,
       universeName,
       filamentResonance: Math.floor(this.sample() * 100),
       physicalModifiers: {
@@ -53,17 +64,10 @@ export class MultiversalDriftManager {
       anomalyDescription: 'Fluctuación cuántica extrema más allá del filamento cósmico principal. Las leyes de la materia se desestabilizan.',
     };
 
-    this.shiftHistory.push(cloneReality(this.currentReality));
-    this.currentReality = newReality;
-    return cloneReality(newReality);
-  }
-
-  getCurrentReality(): ParallelReality {
-    return cloneReality(this.currentReality);
-  }
-
-  getShiftHistory(): ParallelReality[] {
-    return this.shiftHistory.map(cloneReality);
+    return {
+      currentReality: cloneReality(newReality),
+      previousReality: cloneReality(currentReality),
+    };
   }
 
   private sample(): number {

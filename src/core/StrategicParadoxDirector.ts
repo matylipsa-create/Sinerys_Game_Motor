@@ -40,6 +40,13 @@ const INITIAL_STATE: StrategicGlobalState = {
   },
 };
 
+export function createInitialStrategicState(): StrategicGlobalState {
+  return {
+    ...INITIAL_STATE,
+    resourceStockpiles: { ...INITIAL_STATE.resourceStockpiles },
+  };
+}
+
 function cloneChoice(choice: StrategicChoice): StrategicChoice {
   return { ...choice, resourceCost: { ...choice.resourceCost } };
 }
@@ -48,25 +55,18 @@ function cloneCrisis(crisis: ParadoxCrisisEvent): ParadoxCrisisEvent {
   return { ...crisis, choices: crisis.choices.map(cloneChoice) };
 }
 
+/**
+ * Stateless strategic rules. GameEngineCore owns the crisis and resource data.
+ */
 export class StrategicParadoxDirector {
-  private readonly activeCrises = new Map<string, ParadoxCrisisEvent>();
-  private readonly globalStats: StrategicGlobalState = {
-    ...INITIAL_STATE,
-    resourceStockpiles: { ...INITIAL_STATE.resourceStockpiles },
-  };
-  private nextCrisisId = 0;
-
-  constructor() {
-    console.log('[Paradox Director] Initialized strategic event engine.');
-  }
-
-  triggerSystemicCrisis(sector: string): ParadoxCrisisEvent {
+  triggerSystemicCrisis(sector: string, sequence: number): ParadoxCrisisEvent {
     const affectedSector = sector.trim();
     if (!affectedSector) throw new Error('A crisis requires an affected sector.');
+    if (!Number.isInteger(sequence) || sequence < 0) throw new Error('Crisis sequence must be a non-negative integer.');
     const sectorLabel = /^sector(?:\s|$)/i.test(affectedSector) ? affectedSector : `Sector ${affectedSector}`;
 
     const timestamp = Date.now();
-    const crisisId = `crisis-${timestamp}-${this.nextCrisisId++}`;
+    const crisisId = `crisis-${timestamp}-${sequence}`;
     const crisis: ParadoxCrisisEvent = {
       id: crisisId,
       title: `Falla Estructural en ${sectorLabel}`,
@@ -102,60 +102,63 @@ export class StrategicParadoxDirector {
       ],
     };
 
-    this.activeCrises.set(crisisId, crisis);
     return cloneCrisis(crisis);
   }
 
-  discardCrisis(crisisId: string): boolean {
-    return this.activeCrises.delete(crisisId);
-  }
-
-  resolveCrisis(crisisId: string, choiceId: string): CrisisResolution {
-    const crisis = this.activeCrises.get(crisisId);
-    if (!crisis) return { success: false, message: 'Crisis no encontrada.' };
-
+  resolveCrisis(
+    crisis: ParadoxCrisisEvent | undefined,
+    globalState: StrategicGlobalState,
+    choiceId: string,
+  ): { resolution: CrisisResolution; globalState: StrategicGlobalState } {
+    if (!crisis) return { resolution: { success: false, message: 'Crisis no encontrada.' }, globalState };
     const choice = crisis.choices.find((candidate) => candidate.id === choiceId);
-    if (!choice) return { success: false, message: 'Elección inválida.' };
+    if (!choice) return { resolution: { success: false, message: 'Elección inválida.' }, globalState };
 
     for (const [resource, cost] of Object.entries(choice.resourceCost)) {
-      const available = this.globalStats.resourceStockpiles[resource] ?? 0;
+      const available = globalState.resourceStockpiles[resource] ?? 0;
       if (!Number.isFinite(cost) || cost < 0) {
-        return { success: false, message: `Coste inválido para el recurso ${resource}.` };
+        return {
+          resolution: { success: false, message: `Coste inválido para el recurso ${resource}.` },
+          globalState,
+        };
       }
       if (available < cost) {
-        return { success: false, message: `Recursos insuficientes: faltan unidades de ${resource}.` };
+        return {
+          resolution: { success: false, message: `Recursos insuficientes: faltan unidades de ${resource}.` },
+          globalState,
+        };
       }
     }
 
+    const nextGlobalState: StrategicGlobalState = {
+      ...globalState,
+      resourceStockpiles: { ...globalState.resourceStockpiles },
+    };
     for (const [resource, cost] of Object.entries(choice.resourceCost)) {
-      this.globalStats.resourceStockpiles[resource] -= cost;
+      nextGlobalState.resourceStockpiles[resource] -= cost;
     }
 
-    this.globalStats.refugeMorale = this.clampStat(this.globalStats.refugeMorale + choice.moralImpact);
-    this.globalStats.hiveTension = this.clampStat(this.globalStats.hiveTension - choice.securityImpact / 2);
-    this.activeCrises.delete(crisisId);
+    nextGlobalState.refugeMorale = this.clampStat(nextGlobalState.refugeMorale + choice.moralImpact);
+    nextGlobalState.hiveTension = this.clampStat(nextGlobalState.hiveTension - choice.securityImpact / 2);
 
     console.log('[Paradox Director] Crisis resolved:', choice.outcomeDescription);
-    return { success: true, message: choice.outcomeDescription };
-  }
-
-  getActiveCrises(): ParadoxCrisisEvent[] {
-    return Array.from(this.activeCrises.values(), cloneCrisis);
-  }
-
-  getGlobalState(): StrategicGlobalState {
     return {
-      ...this.globalStats,
-      resourceStockpiles: { ...this.globalStats.resourceStockpiles },
+      resolution: { success: true, message: choice.outcomeDescription },
+      globalState: nextGlobalState,
     };
   }
 
-  addResource(resource: string, amount: number): boolean {
+  addResource(globalState: StrategicGlobalState, resource: string, amount: number): StrategicGlobalState | null {
     const key = resource.trim();
-    if (!key || !Number.isInteger(amount) || amount <= 0) return false;
+    if (!key || !Number.isInteger(amount) || amount <= 0) return null;
 
-    this.globalStats.resourceStockpiles[key] = (this.globalStats.resourceStockpiles[key] ?? 0) + amount;
-    return true;
+    return {
+      ...globalState,
+      resourceStockpiles: {
+        ...globalState.resourceStockpiles,
+        [key]: (globalState.resourceStockpiles[key] ?? 0) + amount,
+      },
+    };
   }
 
   private clampStat(value: number): number {

@@ -5,6 +5,8 @@ import type { WorldResponderSystem } from './core/game/WorldResponderSystem';
 import type { PlayerIntent } from './core/game/PlayerIntent';
 import { InterfaceSettings } from './components/InterfaceSettings';
 import { ConquerHome } from './components/ConquerHome';
+import { ParadoxBaselinePanel } from './components/ParadoxBaselinePanel';
+import { GameEngineCore } from './core/GameEngineCore';
 
 const SentraCoreDashboard = lazy(() => import('./components/SentraCoreDashboard').then((module) => ({
   default: module.SentraCoreDashboard,
@@ -405,6 +407,7 @@ function GameRoute({ onBack, runtime, onPersistenceError }: {
 
 export default function App() {
   const [route, setRoute] = useState(getRoute);
+  const [baselineEngine] = useState(() => new GameEngineCore());
   const [runtime, setRuntime] = useState<GameRuntime | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
@@ -527,6 +530,20 @@ export default function App() {
     );
   }
 
+  if (route === '/paradox-baseline') {
+    return (
+      <>
+        <InterfaceSettings />
+        <nav aria-label="Navegación principal" className="fixed right-4 top-4 z-[10000]">
+          <button type="button" onClick={() => navigate('/')} className="min-h-11 border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
+            VOLVER A CONQUER
+          </button>
+        </nav>
+        <ParadoxBaselinePanel engine={baselineEngine} />
+      </>
+    );
+  }
+
   if (route === '/core') {
     return (
       <>
@@ -543,6 +560,9 @@ export default function App() {
           </button>
           <button type="button" onClick={() => navigate('/game')} className="min-h-11 border border-amber-200/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-amber-100 hover:bg-amber-200 hover:text-black">
             JUEGO
+          </button>
+          <button type="button" onClick={() => navigate('/paradox')} className="min-h-11 rounded border border-violet-300/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-violet-200 hover:bg-violet-300 hover:text-black">
+            PARADOX
           </button>
           <button type="button" onClick={() => navigate('/')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
             VOLVER A CONQUER
@@ -566,6 +586,9 @@ export default function App() {
             </button>
             <button type="button" onClick={() => navigate('/core')} className="min-h-11 rounded border border-[#00ffcc]/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black">
               CONQUER ENGINE
+            </button>
+            <button type="button" onClick={() => navigate('/paradox')} className="min-h-11 rounded border border-violet-300/50 bg-[#050507]/90 px-3 py-2 font-mono text-xs text-violet-200 hover:bg-violet-300 hover:text-black">
+              PARADOX
             </button>
           </div>
         </nav>

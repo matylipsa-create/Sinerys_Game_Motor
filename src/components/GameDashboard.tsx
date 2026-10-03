@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { GameEngineCore } from '../core/GameEngineCore';
+import type { ParadoxCrisisEvent } from '../core/StrategicParadoxDirector';
 import { MultiversalRadarWidget } from './MultiversalRadarWidget';
 
 interface Props {
@@ -14,24 +15,35 @@ const SECTORS = [
 ];
 
 export function GameDashboard({ engine }: Props) {
-  const [stats, setStats] = useState(() => engine.paradoxDirector.getGlobalState());
-  const [currentCrisis, setCurrentCrisis] = useState(() =>
-    engine.paradoxDirector.triggerSystemicCrisis('Sector 7-Alfa'),
+  const [session, setSession] = useState(() => engine.getState());
+  const [currentCrisis, setCurrentCrisis] = useState<ParadoxCrisisEvent | null>(
+    () => engine.getState().activeCrises[0] ?? null,
   );
   const [isResolved, setIsResolved] = useState(false);
   const [logMessage, setLogMessage] = useState('Motor sincronizado. Esperando decisiones estratégicas.');
 
+  const refreshSession = () => setSession(engine.getState());
+
+  useEffect(() => {
+    if (currentCrisis) return;
+    setCurrentCrisis(engine.getOrCreateActiveCrisis('Sector 7-Alfa'));
+    refreshSession();
+  }, [currentCrisis, engine]);
+
   const handleResolve = (choiceId: string) => {
-    const result = engine.paradoxDirector.resolveCrisis(currentCrisis.id, choiceId);
+    if (!currentCrisis) return;
+    const result = engine.resolveCrisis(currentCrisis.id, choiceId);
     setLogMessage(result.message);
-    setStats(engine.paradoxDirector.getGlobalState());
+    refreshSession();
     if (result.success) setIsResolved(true);
   };
 
   const handleNewCrisis = () => {
-    if (!isResolved) engine.paradoxDirector.discardCrisis(currentCrisis.id);
+    if (!currentCrisis) return;
+    if (!isResolved) engine.discardCrisis(currentCrisis.id);
     const randomSector = SECTORS[Math.floor(Math.random() * SECTORS.length)];
-    setCurrentCrisis(engine.paradoxDirector.triggerSystemicCrisis(randomSector));
+    setCurrentCrisis(engine.triggerSystemicCrisis(randomSector));
+    refreshSession();
     setIsResolved(false);
     setLogMessage(`¡Alerta sistémica! Nueva crisis detectada en ${randomSector}.`);
   };
@@ -58,26 +70,33 @@ export function GameDashboard({ engine }: Props) {
             <dl className="mt-5 space-y-4">
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="text-sm text-zinc-400">Moral del refugio</dt>
-                <dd className="text-lg font-semibold tabular-nums text-emerald-200">{stats.refugeMorale}%</dd>
+                <dd className="text-lg font-semibold tabular-nums text-emerald-200">{session.strategicState.refugeMorale}%</dd>
               </div>
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="text-sm text-zinc-400">Tensión de la colmena</dt>
-                <dd className="text-lg font-semibold tabular-nums text-rose-200">{stats.hiveTension}%</dd>
+                <dd className="text-lg font-semibold tabular-nums text-rose-200">{session.strategicState.hiveTension}%</dd>
               </div>
             </dl>
 
             <h3 className="mt-6 border-t border-zinc-800 pt-4 text-[10px] uppercase tracking-[0.16em] text-zinc-500">Existencias</h3>
             <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex justify-between gap-3"><span className="text-zinc-400">Biomasa</span><span className="tabular-nums">{stats.resourceStockpiles.biomass}</span></li>
-              <li className="flex justify-between gap-3"><span className="text-zinc-400">Aleación</span><span className="tabular-nums">{stats.resourceStockpiles.alloy}</span></li>
-              <li className="flex justify-between gap-3"><span className="text-zinc-400">Suero de esporas</span><span className="tabular-nums">{stats.resourceStockpiles.sporeSerum}</span></li>
+              <li className="flex justify-between gap-3"><span className="text-zinc-400">Biomasa</span><span className="tabular-nums">{session.strategicState.resourceStockpiles.biomass}</span></li>
+              <li className="flex justify-between gap-3"><span className="text-zinc-400">Aleación</span><span className="tabular-nums">{session.strategicState.resourceStockpiles.alloy}</span></li>
+              <li className="flex justify-between gap-3"><span className="text-zinc-400">Suero de esporas</span><span className="tabular-nums">{session.strategicState.resourceStockpiles.sporeSerum}</span></li>
             </ul>
           </section>
 
-          <MultiversalRadarWidget driftManager={engine.multiversalManager} />
+          <MultiversalRadarWidget
+            reality={session.currentReality}
+            history={session.realityHistory}
+            onBreach={(dimension) => {
+              engine.breachObservableEdge(dimension);
+              refreshSession();
+            }}
+          />
         </div>
 
-        <section aria-labelledby="crisis-title" className="mt-8 border-t border-rose-300/25 pt-5">
+        {currentCrisis ? <section aria-labelledby="crisis-title" className="mt-8 border-t border-rose-300/25 pt-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-300">Alerta sistémica · {currentCrisis.affectedSector}</p>
@@ -118,7 +137,7 @@ export function GameDashboard({ engine }: Props) {
           <p className="mt-5 border-l-2 border-emerald-300/60 bg-emerald-950/25 px-4 py-3 text-xs leading-relaxed text-emerald-100" role="status" aria-live="polite">
             <span className="font-semibold uppercase tracking-wider">Bitácora · </span>{logMessage}
           </p>
-        </section>
+        </section> : <p className="mt-8 border-t border-rose-300/25 pt-5 text-sm text-zinc-400" role="status">Preparando la primera crisis…</p>}
       </div>
     </main>
   );

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { MultiversalDriftManager } from '../core/MultiversalDriftManager';
+import type { ParallelReality } from '../core/MultiversalDriftManager';
 
 interface Props {
-  driftManager: MultiversalDriftManager;
+  reality: ParallelReality;
+  history: ParallelReality[];
+  onBreach: (dimension: string) => void;
 }
 
 const DIMENSIONS = [
@@ -16,20 +18,16 @@ function formatModifier(value: number): string {
   return `${value.toFixed(2)}×`;
 }
 
-export function MultiversalRadarWidget({ driftManager }: Props) {
-  const [reality, setReality] = useState(() => driftManager.getCurrentReality());
-  const [history, setHistory] = useState(() => driftManager.getShiftHistory());
+export function MultiversalRadarWidget({ reality, history, onBreach }: Props) {
   const [error, setError] = useState('');
 
   const handleBreach = () => {
     const dimension = DIMENSIONS[Math.floor(Math.random() * DIMENSIONS.length)];
     try {
-      const nextReality = driftManager.breachObservableEdge(dimension);
-      setReality(nextReality);
-      setHistory(driftManager.getShiftHistory());
+      onBreach(dimension);
       setError('');
-    } catch {
-      setError('No se pudo estabilizar el salto dimensional.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'No se pudo estabilizar el salto dimensional.');
     }
   };
 
