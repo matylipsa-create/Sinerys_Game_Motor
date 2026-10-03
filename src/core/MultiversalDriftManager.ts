@@ -35,7 +35,7 @@ export function createInitialReality(): ParallelReality {
 }
 
 /**
- * Stateless reality-generation rules. GameEngineCore owns the active reality
+ * Stateless reality-generation rules. ConquerOrchestrator owns the active reality
  * and its history.
  */
 export class MultiversalDriftManager {

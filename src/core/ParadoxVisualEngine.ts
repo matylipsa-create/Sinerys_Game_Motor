@@ -31,7 +31,7 @@ export function createInitialOrchestratorSnapshot(): OrchestratorSnapshot {
 }
 
 /**
- * Stateless Paradox rules. Session values are owned by GameEngineCore and
+ * Stateless Paradox rules. Session values are owned by ConquerOrchestrator and
  * supplied to each operation.
  */
 export class OrchestratorVisualEngine {

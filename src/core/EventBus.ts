@@ -8,38 +8,38 @@ export interface EngineBusEventMap {
 type EventListener<T> = (payload: T) => void;
 
 export class EventBus {
-  private static listeners = new Map<string, Set<EventListener<unknown>>>();
+  private readonly listeners = new Map<string, Set<EventListener<unknown>>>();
 
-  static on<K extends keyof EngineBusEventMap>(
+  on<K extends keyof EngineBusEventMap>(
     type: K,
     listener: EventListener<EngineBusEventMap[K]>,
   ): () => void;
-  static on<T>(type: string, listener: EventListener<T>): () => void;
-  static on(type: string, listener: EventListener<unknown>): () => void {
+  on<T>(type: string, listener: EventListener<T>): () => void;
+  on(type: string, listener: EventListener<unknown>): () => void {
     const listeners = this.listeners.get(type) ?? new Set<EventListener<unknown>>();
     listeners.add(listener);
     this.listeners.set(type, listeners);
     return () => this.off(type, listener);
   }
 
-  static off<K extends keyof EngineBusEventMap>(
+  off<K extends keyof EngineBusEventMap>(
     type: K,
     listener: EventListener<EngineBusEventMap[K]>,
   ): void;
-  static off<T>(type: string, listener: EventListener<T>): void;
-  static off(type: string, listener: EventListener<unknown>): void {
+  off<T>(type: string, listener: EventListener<T>): void;
+  off(type: string, listener: EventListener<unknown>): void {
     const listeners = this.listeners.get(type);
     if (!listeners) return;
     listeners.delete(listener);
     if (listeners.size === 0) this.listeners.delete(type);
   }
 
-  static emit<K extends keyof EngineBusEventMap>(
+  emit<K extends keyof EngineBusEventMap>(
     type: K,
     payload: EngineBusEventMap[K],
   ): void;
-  static emit<T>(type: string, payload: T): void;
-  static emit(type: string, payload: unknown): void {
+  emit<T>(type: string, payload: T): void;
+  emit(type: string, payload: unknown): void {
     const subscriptions = [...this.listeners.entries()]
       .filter(([registeredType]) => (
         registeredType === type
@@ -56,7 +56,7 @@ export class EventBus {
     }
   }
 
-  static clear(type?: string): void {
+  clear(type?: string): void {
     if (type === undefined) {
       this.listeners.clear();
       return;

@@ -1,145 +1,201 @@
 import { BehaviorDNAEngine, type FactionCrisis } from './BehaviorDNAEngine';
 import { bridge, type OrchestratorCommand } from './OrchestratorBridge';
-import { ParadoxStorage } from './ParadoxStorage';
+import type { EngineStateChanged, IEngineSystem } from './EngineCore';
+import type { ConquerOrchestrator, GameState } from './ConquerOrchestrator';
+import type { ParadoxSessionState, PlayerState, TacticalEvent } from './ParadoxState';
 
-export type CameraMode = 'ISOMETRIC' | 'FIRST_PERSON' | 'SIDE_SCROLLER';
-export type SurvivalStatus = 'ACTIVE' | 'FAILED';
+export type {
+  CameraMode,
+  PlayerState,
+  SurvivalState,
+  SurvivalStatus,
+  TacticalEvent,
+} from './ParadoxState';
 
-export interface SurvivalState {
-  oxygen: number;
-  radiation: number;
-  mutagenCharges: number;
-  ticksSurvived: number;
-  status: SurvivalStatus;
-}
+const CAMERA_MODES: PlayerState['activeCameraMode'][] = ['ISOMETRIC', 'FIRST_PERSON', 'SIDE_SCROLLER'];
+const MAX_EVENTS = 20;
+const MAX_CRISES = 100;
+const SURVIVAL_TICK_INTERVAL_MS = 5000;
 
-export interface PlayerState {
-  mobScore: number;
-  livingAmmoCount: number;
-  mutagensOwned: string[];
-  shelterVisits: number;
-  realityTier: number;
-  activeCameraMode: CameraMode;
-  mantisFiltersActive: boolean;
-  survival: SurvivalState;
-}
+type ParadoxSessionMutation = (session: ParadoxSessionState) => void;
 
-export interface TacticalEvent {
-  id: number;
-  type: 'FACTION' | 'CRISIS' | 'SYSTEM';
-  message: string;
-  timestamp: number;
-}
+/**
+ * Paradox gameplay adapter. All durable state is owned by ConquerOrchestrator.
+ */
+export class ParadoxOrchestratorEngine implements IEngineSystem<GameState> {
+  readonly id = 'paradox-survival';
+  private survivalElapsedMs = 0;
 
-const CAMERA_MODES: CameraMode[] = ['ISOMETRIC', 'FIRST_PERSON', 'SIDE_SCROLLER'];
-const INITIAL_STATE: PlayerState = {
-  mobScore: 1200,
-  livingAmmoCount: 24,
-  mutagensOwned: ['CHITIN_SLURRY_V1'],
-  shelterVisits: 3,
-  realityTier: 0,
-  activeCameraMode: 'ISOMETRIC',
-  mantisFiltersActive: false,
-  survival: {
-    oxygen: 100,
-    radiation: 5,
-    mutagenCharges: 3,
-    ticksSurvived: 0,
-    status: 'ACTIVE',
-  },
-};
+  constructor(
+    private readonly engine: ConquerOrchestrator,
+    private readonly commandBridge = bridge,
+  ) {}
 
-export class ParadoxOrchestratorEngine {
-  private state: PlayerState;
-  private events: TacticalEvent[];
-  private behaviorDNA: BehaviorDNAEngine;
-
-  constructor() {
-    const saved = ParadoxStorage.loadGameData();
-    this.state = saved?.state ?? { ...INITIAL_STATE, mutagensOwned: [...INITIAL_STATE.mutagensOwned] };
-    this.events = saved?.events ?? [];
-    this.behaviorDNA = new BehaviorDNAEngine(saved?.crises ?? []);
+  update(deltaMs: number): void {
+    if (this.getSession().state.survival.status === 'FAILED') return;
+    this.survivalElapsedMs += deltaMs;
+    if (this.survivalElapsedMs < SURVIVAL_TICK_INTERVAL_MS) return;
+    this.survivalElapsedMs %= SURVIVAL_TICK_INTERVAL_MS;
+    this.tickSurvival();
   }
 
-  private persist(): void {
-    ParadoxStorage.saveGameData(this.state, this.events, this.behaviorDNA.getCrisisHistory());
+  subscribe(onChange: () => void): () => void {
+    return this.engine.subscribe<EngineStateChanged<GameState>>(
+      'engine:state:changed:*',
+      (change) => {
+        if (change.engineId === this.engine.engineId) onChange();
+      },
+    );
+  }
+
+  private getSession(): ParadoxSessionState {
+    return this.engine.getState().paradoxSession;
+  }
+
+  private mutate(
+    actionType: string,
+    update: ParadoxSessionMutation,
+    event?: { type: TacticalEvent['type']; message: string },
+  ): void {
+    this.engine.applyMutation({
+      type: actionType,
+      apply: (draft: GameState) => {
+        update(draft.paradoxSession);
+        if (event) {
+          const nextId = draft.paradoxSession.events.reduce((maximum, item) => Math.max(maximum, item.id), 0) + 1;
+          draft.paradoxSession.events = [{
+            id: nextId,
+            type: event.type,
+            message: event.message,
+            timestamp: Date.now(),
+          }, ...draft.paradoxSession.events].slice(0, MAX_EVENTS);
+        }
+        draft.paradoxSession.crises = draft.paradoxSession.crises.slice(0, MAX_CRISES);
+      },
+    });
   }
 
   private recordEvent(type: TacticalEvent['type'], message: string): void {
-    this.events = [{ id: Date.now(), type, message, timestamp: Date.now() }, ...this.events].slice(0, 20);
-    this.persist();
+    this.mutate('paradox.event.record', () => undefined, { type, message });
   }
 
   public registerMobKill(scoreGained: number): PlayerState {
-    if (this.state.survival.status === 'FAILED' || !Number.isFinite(scoreGained) || scoreGained <= 0) return this.getState();
-    this.state.mobScore += Math.floor(scoreGained);
-    this.recordEvent('SYSTEM', `Mob eliminated. +${Math.floor(scoreGained)} mob score.`);
-    return this.getState();
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || !Number.isFinite(scoreGained) || scoreGained <= 0) return state;
+    const reward = Math.floor(scoreGained);
+    this.mutate('paradox.combat.mob-kill', (session) => {
+      session.state.mobScore += reward;
+    }, { type: 'SYSTEM', message: `Mob eliminated. +${reward} mob score.` });
+    return this.getSession().state;
   }
 
   public visitShelter(): { mutated: boolean; state: PlayerState } {
-    if (this.state.survival.status === 'FAILED') return { mutated: false, state: this.getState() };
-    this.state.shelterVisits += 1;
-    const mutated = this.state.shelterVisits % 4 === 0;
-    if (mutated) this.state.realityTier += 1;
-    this.recordEvent('SYSTEM', mutated
-      ? `Spacetime mutation triggered. Reality tier ${this.state.realityTier}.`
-      : `Shelter visit registered (${this.state.shelterVisits % 4}/4 to mutation).`);
-    const crisis = this.behaviorDNA.evaluateCrisisTrigger(this.state.shelterVisits);
-    if (crisis) {
-      this.recordEvent('CRISIS', `${crisis.severity}: ${crisis.title}`);
-      bridge.sendCommand({ type: 'TRIGGER_CRISIS', payload: { crisis } });
-    }
+    const session = this.getSession();
+    if (session.state.survival.status === 'FAILED') return { mutated: false, state: session.state };
+
+    const shelterVisits = session.state.shelterVisits + 1;
+    const visualState = this.engine.registerShelterVisit();
+    const mutated = visualState.currentRealityTier > session.state.realityTier;
+    const behaviorDNA = new BehaviorDNAEngine(session.crises);
+    const crisis = behaviorDNA.evaluateCrisisTrigger(shelterVisits);
+    const faction = mutated ? behaviorDNA.evaluateFactionEvent() : null;
+    const mobBehaviorDNA = mutated ? behaviorDNA.evolveMobsForTier(session.state.realityTier + 1) : null;
+    const eventMessages: Array<{ type: TacticalEvent['type']; message: string }> = [{
+      type: 'SYSTEM',
+      message: mutated
+        ? `Spacetime mutation triggered. Reality tier ${session.state.realityTier + 1}.`
+        : `Shelter visit registered (${shelterVisits % 4}/4 to mutation).`,
+    }];
+    if (crisis) eventMessages.push({ type: 'CRISIS', message: `${crisis.severity}: ${crisis.title}` });
+    if (faction) eventMessages.push({ type: 'FACTION', message: `${faction.faction}: ${faction.description}` });
+
+    this.engine.applyMutation({
+      type: 'paradox.shelter.visit',
+      apply: (draft) => {
+        draft.paradoxSession.state.shelterVisits = shelterVisits;
+        draft.paradoxSession.state.realityTier = visualState.currentRealityTier;
+        draft.paradoxSession.crises = behaviorDNA.getCrisisHistory().slice(0, MAX_CRISES);
+        let nextId = draft.paradoxSession.events.reduce((maximum, item) => Math.max(maximum, item.id), 0) + 1;
+        for (const item of eventMessages) {
+          draft.paradoxSession.events.unshift({
+            ...item,
+            id: nextId++,
+            timestamp: Date.now(),
+          });
+        }
+        draft.paradoxSession.events = draft.paradoxSession.events.slice(0, MAX_EVENTS);
+      },
+    });
+
+    if (crisis) this.commandBridge.sendCommand({ type: 'TRIGGER_CRISIS', payload: { crisis } });
     if (mutated) {
-      const faction = this.behaviorDNA.evaluateFactionEvent();
-      const mobBehaviorDNA = this.behaviorDNA.evolveMobsForTier(this.state.realityTier);
-      this.recordEvent('FACTION', `${faction.faction}: ${faction.description}`);
-      bridge.sendCommand({
+      this.commandBridge.sendCommand({
         type: 'MUTATE_SPACETIME',
-        payload: { realityTier: this.state.realityTier },
+        payload: { realityTier: session.state.realityTier + 1 },
       });
-      bridge.sendCommand({
+      this.commandBridge.sendCommand({
         type: 'SPAWN_MOBS',
-        payload: { realityTier: this.state.realityTier, mobBehaviorDNA },
-      });
-      bridge.sendCommand({
-        type: 'UPDATE_PERCEPTION',
-        payload: { shelterVisits: this.state.shelterVisits, faction },
-      });
-    } else {
-      bridge.sendCommand({
-        type: 'UPDATE_PERCEPTION',
-        payload: { shelterVisits: this.state.shelterVisits, realityTier: this.state.realityTier },
+        payload: { realityTier: session.state.realityTier + 1, mobBehaviorDNA },
       });
     }
-    this.persist();
-    return { mutated, state: this.getState() };
+    this.commandBridge.sendCommand({
+      type: 'UPDATE_PERCEPTION',
+      payload: mutated
+        ? { shelterVisits, realityTier: session.state.realityTier + 1, faction }
+        : { shelterVisits, realityTier: session.state.realityTier },
+    });
+
+    return { mutated, state: this.getSession().state };
   }
 
   public purchaseLivingAmmo(cost: number): boolean {
-    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0 || this.state.mobScore < cost) return false;
-    this.state.mobScore -= cost;
-    this.state.livingAmmoCount += 10;
-    this.recordEvent('SYSTEM', 'Living ammo acquired. +10 rounds.');
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0 || state.mobScore < cost) return false;
+    this.mutate('paradox.economy.purchase-ammo', (session) => {
+      session.state.mobScore -= cost;
+      session.state.livingAmmoCount += 10;
+    }, { type: 'SYSTEM', message: 'Living ammo acquired. +10 rounds.' });
     return true;
   }
 
   public purchaseMutagen(mutagenId: string, cost: number): boolean {
-    if (this.state.survival.status === 'FAILED' || !mutagenId.trim() || !Number.isFinite(cost) || cost < 0
-      || this.state.mobScore < cost || this.state.mutagensOwned.includes(mutagenId)) return false;
-    this.state.mobScore -= cost;
-    this.state.mutagensOwned = [...this.state.mutagensOwned, mutagenId];
-    this.recordEvent('SYSTEM', `Mutagen acquired: ${mutagenId}.`);
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || !mutagenId.trim() || !Number.isFinite(cost) || cost < 0
+      || state.mobScore < cost || state.mutagensOwned.includes(mutagenId)) return false;
+    this.mutate('paradox.economy.purchase-mutagen', (session) => {
+      session.state.mobScore -= cost;
+      session.state.mutagensOwned.push(mutagenId);
+    }, { type: 'SYSTEM', message: `Mutagen acquired: ${mutagenId}.` });
     return true;
   }
 
   public tickSurvival(): PlayerState {
-    if (this.state.survival.status === 'FAILED') return this.getState();
-    const survival = this.state.survival;
-    survival.ticksSurvived += 1;
-    survival.oxygen = Math.max(0, survival.oxygen - 1.5);
-    survival.radiation = Math.min(100, survival.radiation + 0.8);
-    bridge.sendCommand({
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED') return state;
+
+    const survival = {
+      ...state.survival,
+      ticksSurvived: state.survival.ticksSurvived + 1,
+      oxygen: Math.max(0, state.survival.oxygen - 1.5),
+      radiation: Math.min(100, state.survival.radiation + 0.8),
+    };
+    const failedByOxygen = survival.oxygen <= 0;
+    const failedByRadiation = survival.radiation >= 100;
+    if (failedByOxygen || failedByRadiation) survival.status = 'FAILED';
+
+    const event = failedByOxygen
+      ? { type: 'CRISIS' as const, message: 'SUIT FAILURE: oxygen reserves depleted.' }
+      : failedByRadiation
+        ? { type: 'CRISIS' as const, message: 'SUIT FAILURE: radiation exposure exceeded safe limits.' }
+        : survival.ticksSurvived % 6 === 0
+          ? { type: 'SYSTEM' as const, message: `Suit check ${survival.ticksSurvived}: O2 ${Math.ceil(survival.oxygen)}%, RAD ${Math.ceil(survival.radiation)}%.` }
+          : undefined;
+
+    this.mutate('paradox.survival.tick', (session) => {
+      session.state.survival = survival;
+    }, event);
+
+    this.commandBridge.sendCommand({
       type: 'UPDATE_PERCEPTION',
       payload: {
         survival: {
@@ -150,115 +206,136 @@ export class ParadoxOrchestratorEngine {
         },
       },
     });
-
-    if (survival.oxygen <= 0 || survival.radiation >= 100) {
-      survival.status = 'FAILED';
-      this.recordEvent('CRISIS', survival.oxygen <= 0
-        ? 'SUIT FAILURE: oxygen reserves depleted.'
-        : 'SUIT FAILURE: radiation exposure exceeded safe limits.');
-    } else if (survival.ticksSurvived % 6 === 0) {
-      this.recordEvent('SYSTEM', `Suit check ${survival.ticksSurvived}: O2 ${Math.ceil(survival.oxygen)}%, RAD ${Math.ceil(survival.radiation)}%.`);
-    } else {
-      this.persist();
-    }
-    return this.getState();
+    return this.getSession().state;
   }
 
   public refillOxygen(cost = 90): boolean {
-    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0
-      || this.state.mobScore < cost || this.state.survival.oxygen >= 100) return false;
-    this.state.mobScore -= cost;
-    this.state.survival.oxygen = Math.min(100, this.state.survival.oxygen + 30);
-    this.recordEvent('SYSTEM', 'Suit oxygen reserve replenished by 30%.');
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0
+      || state.mobScore < cost || state.survival.oxygen >= 100) return false;
+    this.mutate('paradox.survival.refill-oxygen', (session) => {
+      session.state.mobScore -= cost;
+      session.state.survival.oxygen = Math.min(100, session.state.survival.oxygen + 30);
+    }, { type: 'SYSTEM', message: 'Suit oxygen reserve replenished by 30%.' });
     return true;
   }
 
   public useMutagenCharge(): boolean {
-    const survival = this.state.survival;
-    if (survival.status === 'FAILED' || survival.mutagenCharges <= 0 || survival.radiation <= 0) return false;
-    survival.mutagenCharges -= 1;
-    survival.radiation = Math.max(0, survival.radiation - 28);
-    this.recordEvent('SYSTEM', 'Mutagen dose stabilized radiation exposure.');
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || state.survival.mutagenCharges <= 0 || state.survival.radiation <= 0) return false;
+    this.mutate('paradox.survival.use-mutagen', (session) => {
+      session.state.survival.mutagenCharges -= 1;
+      session.state.survival.radiation = Math.max(0, session.state.survival.radiation - 28);
+    }, { type: 'SYSTEM', message: 'Mutagen dose stabilized radiation exposure.' });
     return true;
   }
 
   public purchaseMutagenCharges(cost = 180): boolean {
-    if (this.state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0
-      || this.state.mobScore < cost) return false;
-    this.state.mobScore -= cost;
-    this.state.survival.mutagenCharges += 2;
-    this.recordEvent('SYSTEM', 'Two mutagen doses added to suit inventory.');
+    const { state } = this.getSession();
+    if (state.survival.status === 'FAILED' || !Number.isFinite(cost) || cost < 0 || state.mobScore < cost) return false;
+    this.mutate('paradox.economy.purchase-mutagen-charges', (session) => {
+      session.state.mobScore -= cost;
+      session.state.survival.mutagenCharges += 2;
+    }, { type: 'SYSTEM', message: 'Two mutagen doses added to suit inventory.' });
     return true;
   }
 
   public restartSurvivalRun(): void {
-    this.state.survival = {
-      oxygen: 100,
-      radiation: 5,
-      mutagenCharges: 3,
-      ticksSurvived: 0,
-      status: 'ACTIVE',
-    };
-    this.recordEvent('SYSTEM', 'New suit cycle initialized.');
+    this.mutate('paradox.survival.restart', (session) => {
+      session.state.survival = {
+        oxygen: 100,
+        radiation: 5,
+        mutagenCharges: 3,
+        ticksSurvived: 0,
+        status: 'ACTIVE',
+      };
+    }, { type: 'SYSTEM', message: 'New suit cycle initialized.' });
   }
 
-  public toggleCameraMode(): CameraMode {
-    const currentIndex = CAMERA_MODES.indexOf(this.state.activeCameraMode);
-    this.state.activeCameraMode = CAMERA_MODES[(currentIndex + 1) % CAMERA_MODES.length];
-    this.persist();
-    bridge.sendCommand({
-      type: 'UPDATE_PERCEPTION',
-      payload: { activeCameraMode: this.state.activeCameraMode },
+  public toggleCameraMode(): PlayerState['activeCameraMode'] {
+    const { state } = this.getSession();
+    const currentIndex = CAMERA_MODES.indexOf(state.activeCameraMode);
+    const nextMode = CAMERA_MODES[(currentIndex + 1) % CAMERA_MODES.length];
+    this.mutate('paradox.perception.camera', (session) => {
+      session.state.activeCameraMode = nextMode;
     });
-    return this.state.activeCameraMode;
+    this.commandBridge.sendCommand({
+      type: 'UPDATE_PERCEPTION',
+      payload: { activeCameraMode: nextMode },
+    });
+    return nextMode;
   }
 
   public toggleMantisFilters(): boolean {
-    this.state.mantisFiltersActive = !this.state.mantisFiltersActive;
-    this.persist();
-    bridge.sendCommand({
-      type: 'UPDATE_PERCEPTION',
-      payload: { mantisFiltersActive: this.state.mantisFiltersActive },
+    const nextValue = !this.getSession().state.mantisFiltersActive;
+    this.mutate('paradox.perception.mantis', (session) => {
+      session.state.mantisFiltersActive = nextValue;
     });
-    return this.state.mantisFiltersActive;
+    this.commandBridge.sendCommand({
+      type: 'UPDATE_PERCEPTION',
+      payload: { mantisFiltersActive: nextValue },
+    });
+    return nextValue;
   }
 
   public registerFactionEvent(faction: string, detail: string): void {
-    this.recordEvent('FACTION', `${faction}: ${detail}`);
-    bridge.sendCommand({ type: 'UPDATE_PERCEPTION', payload: { faction, detail } });
+    const eventFaction = faction.trim();
+    const eventDetail = detail.trim();
+    if (!eventFaction || !eventDetail) throw new Error('Faction events require a faction and a description.');
+    this.recordEvent('FACTION', `${eventFaction}: ${eventDetail}`);
+    this.commandBridge.sendCommand({
+      type: 'UPDATE_PERCEPTION',
+      payload: { faction: eventFaction, detail: eventDetail },
+    });
   }
 
   public registerCrisisEvent(detail: string): void {
-    const crisis = this.behaviorDNA.createCrisis('Containment breach reported', detail);
-    this.recordEvent('CRISIS', `${crisis.severity}: ${crisis.title} - ${crisis.description}`);
-    this.persist();
-    bridge.sendCommand({ type: 'TRIGGER_CRISIS', payload: { crisis } });
+    const behaviorDNA = new BehaviorDNAEngine(this.getSession().crises);
+    const crisis = behaviorDNA.createCrisis('Containment breach reported', detail);
+    this.mutate('paradox.crisis.create', (session) => {
+      session.crises = behaviorDNA.getCrisisHistory();
+    }, { type: 'CRISIS', message: `${crisis.severity}: ${crisis.title} - ${crisis.description}` });
+    this.commandBridge.sendCommand({ type: 'TRIGGER_CRISIS', payload: { crisis } });
   }
 
   public getActiveCrises(): FactionCrisis[] {
-    return this.behaviorDNA.getActiveCrises();
+    return this.getSession().crises.filter((crisis) => !crisis.resolved);
   }
 
   public resolveCrisis(crisisId: string): boolean {
-    const resolved = this.behaviorDNA.resolveCrisis(crisisId);
-    if (resolved) this.recordEvent('SYSTEM', `Crisis resolved: ${crisisId}.`);
-    return resolved;
+    const behaviorDNA = new BehaviorDNAEngine(this.getSession().crises);
+    if (!behaviorDNA.resolveCrisis(crisisId)) return false;
+    this.mutate('paradox.crisis.resolve', (session) => {
+      session.crises = behaviorDNA.getCrisisHistory();
+    }, { type: 'SYSTEM', message: `Crisis resolved: ${crisisId}.` });
+    return true;
   }
 
   public applyRendererCommand(command: OrchestratorCommand): void {
     switch (command.type) {
       case 'MUTATE_SPACETIME': {
         const tier = command.payload.realityTier;
-        if (Number.isInteger(tier) && Number(tier) >= 0) this.state.realityTier = Number(tier);
-        this.recordEvent('SYSTEM', `Renderer acknowledged reality tier ${this.state.realityTier}.`);
+        if (Number.isInteger(tier) && Number(tier) >= 0) {
+          this.mutate('paradox.renderer.mutation-acknowledged', (session) => {
+            session.state.realityTier = Number(tier);
+          }, { type: 'SYSTEM', message: `Renderer acknowledged reality tier ${Number(tier)}.` });
+        }
         break;
       }
       case 'UPDATE_PERCEPTION': {
         const cameraMode = command.payload.activeCameraMode;
         const mantisFiltersActive = command.payload.mantisFiltersActive;
-        if (CAMERA_MODES.includes(cameraMode as CameraMode)) this.state.activeCameraMode = cameraMode as CameraMode;
-        if (typeof mantisFiltersActive === 'boolean') this.state.mantisFiltersActive = mantisFiltersActive;
-        this.persist();
+        if (CAMERA_MODES.includes(cameraMode as PlayerState['activeCameraMode'])
+          || typeof mantisFiltersActive === 'boolean') {
+          this.mutate('paradox.renderer.perception-update', (session) => {
+            if (CAMERA_MODES.includes(cameraMode as PlayerState['activeCameraMode'])) {
+              session.state.activeCameraMode = cameraMode as PlayerState['activeCameraMode'];
+            }
+            if (typeof mantisFiltersActive === 'boolean') {
+              session.state.mantisFiltersActive = mantisFiltersActive;
+            }
+          });
+        }
         break;
       }
       case 'SPAWN_MOBS':
@@ -267,9 +344,11 @@ export class ParadoxOrchestratorEngine {
       case 'TRIGGER_CRISIS': {
         const crisis = command.payload.crisis as FactionCrisis | undefined;
         if (crisis) {
-          this.behaviorDNA.addCrisis(crisis);
-          this.recordEvent('CRISIS', `${crisis.severity}: ${crisis.title}`);
-          this.persist();
+          const behaviorDNA = new BehaviorDNAEngine(this.getSession().crises);
+          behaviorDNA.addCrisis(crisis);
+          this.mutate('paradox.renderer.crisis-received', (session) => {
+            session.crises = behaviorDNA.getCrisisHistory();
+          }, { type: 'CRISIS', message: `${crisis.severity}: ${crisis.title}` });
         }
         break;
       }
@@ -277,16 +356,11 @@ export class ParadoxOrchestratorEngine {
   }
 
   public getState(): PlayerState {
-    return {
-      ...this.state,
-      mutagensOwned: [...this.state.mutagensOwned],
-      survival: { ...this.state.survival },
-    };
+    const state = this.getSession().state;
+    return { ...state, mutagensOwned: [...state.mutagensOwned], survival: { ...state.survival } };
   }
 
   public getEvents(): TacticalEvent[] {
-    return this.events.map((event) => ({ ...event }));
+    return this.getSession().events.map((event) => ({ ...event }));
   }
 }
-
-export const globalOrchestrator = new ParadoxOrchestratorEngine();

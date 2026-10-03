@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { GameEngineCore } from '../core/GameEngineCore';
+import type { ConquerOrchestrator } from '../core/ConquerOrchestrator';
 import type { ParadoxCrisisEvent } from '../core/StrategicParadoxDirector';
 import { MultiversalRadarWidget } from './MultiversalRadarWidget';
 
 interface Props {
-  engine: GameEngineCore;
+  engine: ConquerOrchestrator;
 }
 
 const SECTORS = [

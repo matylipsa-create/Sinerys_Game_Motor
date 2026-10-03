@@ -56,7 +56,7 @@ function cloneCrisis(crisis: ParadoxCrisisEvent): ParadoxCrisisEvent {
 }
 
 /**
- * Stateless strategic rules. GameEngineCore owns the crisis and resource data.
+ * Stateless strategic rules. ConquerOrchestrator owns the crisis and resource data.
  */
 export class StrategicParadoxDirector {
   triggerSystemicCrisis(sector: string, sequence: number): ParadoxCrisisEvent {

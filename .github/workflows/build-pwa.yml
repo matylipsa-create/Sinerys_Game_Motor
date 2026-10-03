@@ -3,6 +3,8 @@ name: Build Sentra Perception PWA
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -22,6 +24,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Test core architecture
+        run: npm run test:core
 
       - name: Build PWA
         run: npm run build

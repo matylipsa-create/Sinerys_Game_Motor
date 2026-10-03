@@ -1,9 +1,7 @@
 import type {
-  EngineStateChanged,
   IEngineContext,
   IEngineSystem,
 } from '../EngineCore.ts';
-import { EventBus } from '../EventBus.ts';
 import type { GameState } from '../ConquerOrchestrator.ts';
 import type { PlayerIntent } from './PlayerIntent.ts';
 
@@ -79,7 +77,12 @@ export class WorldResponderSystem implements IEngineSystem<GameState> {
     this.passiveDecayTimeMs = 0;
     this.pendingHealthSource = 'neutral';
     this.pendingIntents = [];
-    this.unsubscribe = EventBus.on<EngineStateChanged<GameState>>(
+    this.unsubscribe = this.engine.subscribe<{
+      engineId: string;
+      actionType: string;
+      revision: number;
+      state: GameState;
+    }>(
       'engine:state:changed:*',
       (change) => this.respond(change),
     );
@@ -95,7 +98,7 @@ export class WorldResponderSystem implements IEngineSystem<GameState> {
     this.engine = null;
   }
 
-  update(): void {
+  update(_deltaMs: number): void {
     if (!this.engine || this.engine.time.getMode() !== 'ACTIVE') return;
     const simulationTime = this.engine.time.getSimulationTime();
     const elapsedMs = simulationTime - this.lastSimulationTime;
@@ -151,9 +154,14 @@ export class WorldResponderSystem implements IEngineSystem<GameState> {
     }
   }
 
-  private respond(change: EngineStateChanged<GameState>): void {
+  private respond(change: {
+    engineId: string;
+    actionType: string;
+    revision: number;
+    state: GameState;
+  }): void {
     if (!this.engine || change.engineId !== this.engine.engineId) return;
-    const previousHealth = getPartyHealth(change.previousState);
+    const previousHealth = this.previousHealth;
     const currentHealth = getPartyHealth(change.state);
     const healthChanged = previousHealth !== currentHealth;
     if (healthChanged) {

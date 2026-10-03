@@ -1,7 +1,15 @@
 import type { EngineEvent, EngineStateChanged } from '../EngineCore.ts';
-import { EventBus } from '../EventBus.ts';
 import type { GameState } from '../ConquerOrchestrator.ts';
 import { EngineOrchestrator } from '../EngineOrchestrator.ts';
+import { createInitialReality } from '../MultiversalDriftManager.ts';
+import { ParadoxStorage } from '../ParadoxStorage.ts';
+import { createInitialParadoxSession, type ParadoxSessionState } from '../ParadoxState.ts';
+import {
+  CameraMode,
+  createInitialOrchestratorSnapshot,
+  type OrchestratorSnapshot,
+} from '../ParadoxVisualEngine.ts';
+import { createInitialStrategicState } from '../StrategicParadoxDirector.ts';
 import { createPlayerIntentAction, type PlayerIntent } from './PlayerIntent.ts';
 import type { ArenaState } from '../../pwa/arena/SentraCoreArena.ts';
 
@@ -36,7 +44,7 @@ export type RendererBridgeEvent =
   | { kind: 'event'; event: EngineEvent; revision: number };
 
 interface PersistedCheckpoint {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   sessionId?: string;
   startedAt?: string;
   stateHash: string;
@@ -111,11 +119,100 @@ async function hashGameState(state: FallOfZionState): Promise<string> {
 function isPersistedCheckpoint(value: unknown): value is PersistedCheckpoint {
   if (!value || typeof value !== 'object') return false;
   const checkpoint = value as Partial<PersistedCheckpoint>;
-  if ((checkpoint.schemaVersion !== 1 && checkpoint.schemaVersion !== 2)
+  if ((checkpoint.schemaVersion !== 1 && checkpoint.schemaVersion !== 2 && checkpoint.schemaVersion !== 3)
     || typeof checkpoint.stateHash !== 'string'
     || !checkpoint.state || typeof checkpoint.state !== 'object') return false;
   return checkpoint.schemaVersion === 1
     || (typeof checkpoint.sessionId === 'string' && typeof checkpoint.startedAt === 'string');
+}
+
+function isParadoxSessionState(value: unknown): value is ParadoxSessionState {
+  if (!value || typeof value !== 'object') return false;
+  const session = value as Partial<ParadoxSessionState>;
+  return !!session.state
+    && typeof session.state === 'object'
+    && Array.isArray(session.state.mutagensOwned)
+    && !!session.state.survival
+    && typeof session.state.survival === 'object'
+    && Array.isArray(session.events)
+    && Array.isArray(session.crises);
+}
+
+function isOrchestratorSnapshot(value: unknown): value is OrchestratorSnapshot {
+  if (!value || typeof value !== 'object') return false;
+  const snapshot = value as Partial<OrchestratorSnapshot>;
+  return Number.isInteger(snapshot.shelterVisitCount)
+    && Number.isInteger(snapshot.currentRealityTier)
+    && ['aggressive', 'tactical', 'passive'].includes(snapshot.currentPlaystyle as string)
+    && Number.isFinite(snapshot.mutationSeed);
+}
+
+function visualCameraMode(mode: ParadoxSessionState['state']['activeCameraMode']): CameraMode {
+  switch (mode) {
+    case 'FIRST_PERSON':
+      return CameraMode.FIRST_PERSON_IMMERSIVE;
+    case 'SIDE_SCROLLER':
+      return CameraMode.SIDE_SCROLLER_METROID;
+    default:
+      return CameraMode.ISOMETRIC_TACTICAL;
+  }
+}
+
+function migrateGameState(
+  savedState: FallOfZionState,
+  legacyParadox: ReturnType<typeof ParadoxStorage.loadGameData>,
+): { state: FallOfZionState; importedLegacyParadox: boolean; needsRewrite: boolean } {
+  const candidate = structuredClone(savedState) as Partial<FallOfZionState>;
+  const importedLegacyParadox = !isParadoxSessionState(candidate.paradoxSession) && legacyParadox !== null;
+  const needsRewrite = importedLegacyParadox
+    || !isParadoxSessionState(candidate.paradoxSession)
+    || !isOrchestratorSnapshot(candidate.paradoxVisual)
+    || candidate.paradoxVisual?.shelterVisitCount !== candidate.paradoxSession?.state.shelterVisits
+    || candidate.paradoxVisual?.currentRealityTier !== candidate.paradoxSession?.state.realityTier
+    || !Object.values(CameraMode).includes(candidate.cameraMode as CameraMode)
+    || !candidate.strategicState
+    || !Array.isArray(candidate.activeCrises)
+    || !Number.isInteger(candidate.nextCrisisId)
+    || !candidate.currentReality
+    || !Array.isArray(candidate.realityHistory)
+    || !Number.isInteger(candidate.nextRealityId);
+  const initialParadox = createInitialParadoxSession();
+  const paradoxSession = isParadoxSessionState(candidate.paradoxSession)
+    ? candidate.paradoxSession
+    : legacyParadox
+      ? {
+          state: legacyParadox.state,
+          events: legacyParadox.events,
+          crises: legacyParadox.crises,
+        }
+      : initialParadox;
+  const initialVisual = createInitialOrchestratorSnapshot();
+  initialVisual.shelterVisitCount = paradoxSession.state.shelterVisits;
+  initialVisual.currentRealityTier = paradoxSession.state.realityTier;
+  const paradoxVisual = isOrchestratorSnapshot(candidate.paradoxVisual)
+    ? { ...candidate.paradoxVisual }
+    : initialVisual;
+  paradoxVisual.shelterVisitCount = paradoxSession.state.shelterVisits;
+  paradoxVisual.currentRealityTier = paradoxSession.state.realityTier;
+
+  return {
+    state: {
+      ...candidate,
+      paradoxSession,
+      paradoxVisual,
+      cameraMode: !importedLegacyParadox && Object.values(CameraMode).includes(candidate.cameraMode as CameraMode)
+        ? candidate.cameraMode as CameraMode
+        : visualCameraMode(paradoxSession.state.activeCameraMode),
+      strategicState: candidate.strategicState ?? createInitialStrategicState(),
+      activeCrises: candidate.activeCrises ?? [],
+      nextCrisisId: candidate.nextCrisisId ?? 0,
+      currentReality: candidate.currentReality ?? createInitialReality(),
+      realityHistory: candidate.realityHistory ?? [],
+      nextRealityId: candidate.nextRealityId ?? 0,
+    } as FallOfZionState,
+    importedLegacyParadox,
+    needsRewrite,
+  };
 }
 
 export class OrchestratorBridge {
@@ -161,7 +258,27 @@ export class OrchestratorBridge {
 
   async restoreCheckpoint(): Promise<boolean> {
     const checkpoint = await this.readCheckpoint();
-    if (!checkpoint) return false;
+    const legacyParadox = ParadoxStorage.loadGameData();
+    if (!checkpoint) {
+      if (!legacyParadox) return false;
+      this.engine.applyMutation({
+        type: 'checkpoint.legacy-paradox-migration',
+        apply: (draft) => {
+          const state = draft as FallOfZionState;
+          state.paradoxSession = {
+            state: legacyParadox.state,
+            events: legacyParadox.events,
+            crises: legacyParadox.crises,
+          };
+          state.paradoxVisual.shelterVisitCount = legacyParadox.state.shelterVisits;
+          state.paradoxVisual.currentRealityTier = legacyParadox.state.realityTier;
+          state.cameraMode = visualCameraMode(legacyParadox.state.activeCameraMode);
+        },
+      });
+      await this.writeCheckpoint(this.engine.getState() as FallOfZionState);
+      ParadoxStorage.clearSave();
+      return true;
+    }
     const actualHash = await hashGameState(checkpoint.state);
     if (actualHash !== checkpoint.stateHash) {
       throw new Error('The saved game checkpoint failed its state hash check.');
@@ -169,16 +286,21 @@ export class OrchestratorBridge {
 
     this.sessionId = checkpoint.sessionId ?? this.bridgeId;
     this.sessionStartedAt = checkpoint.startedAt ?? this.sessionStartedAt;
-    const restoredState = structuredClone(checkpoint.state);
+    const migration = migrateGameState(checkpoint.state, legacyParadox);
+    const restoredState = migration.state;
     this.engine.applyMutation({
       type: 'checkpoint.restore',
       apply: (draft) => Object.assign(draft, restoredState),
     });
+    if (checkpoint.schemaVersion < 3 || migration.needsRewrite) {
+      await this.writeCheckpoint(restoredState);
+      if (migration.importedLegacyParadox) ParadoxStorage.clearSave();
+    }
     return true;
   }
 
   subscribeCheckpoints(onError: (error: Error) => void): () => void {
-    return EventBus.on<EngineStateChanged<GameState>>(
+    return this.engine.subscribe<EngineStateChanged<GameState>>(
       'engine:state:changed:*',
       (change) => {
         if (change.engineId !== this.engine.engineId) return;
@@ -249,13 +371,13 @@ export class OrchestratorBridge {
   }
 
   subscribeRenderer(listener: (event: RendererBridgeEvent) => void): () => void {
-    const unsubscribeState = EventBus.on<EngineStateChanged<GameState>>(
+    const unsubscribeState = this.engine.subscribe<EngineStateChanged<GameState>>(
       'engine:state:changed:*',
       (change) => {
         if (change.engineId === this.engine.engineId) listener({ kind: 'state', change });
       },
     );
-    const unsubscribeEvents = EventBus.on<{
+    const unsubscribeEvents = this.engine.subscribe<{
       engineId: string;
       event: EngineEvent;
       revision: number;
@@ -610,7 +732,7 @@ export class OrchestratorBridge {
     const stateHash = await hashGameState(state);
     const database = await this.openCheckpointDatabase();
     const checkpoint: PersistedCheckpoint = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       sessionId: this.sessionId,
       startedAt: this.sessionStartedAt,
       stateHash,

@@ -1,22 +1,45 @@
-# Sentra Core: Paradox Orchestrator
+# Conquer Orchestrator
 
-Panel de control táctico para el estado de juego y los eventos del mundo de Conquer of Darkness.
+## Runtime ownership
 
-## Panel Paradox
+`ConquerOrchestrator` is the authoritative owner of the web game's session and
+the 15-floor dungeon. It extends the generic `EngineOrchestrator`, which
+provides mutation validation, an instance-scoped event bus, lifecycle management
+and the simulation clock. `GameEngineCore` remains only as a compatibility
+adapter; Paradox, crisis, strategic and reality systems operate on the same
+Conquer session instead of maintaining parallel game state.
 
-Abre `/paradox` para inspeccionar y operar el estado local:
+Registered systems receive elapsed time through `update(deltaMs)`. The app
+advances the engine with `tick(deltaMs)` from its animation-frame loop only
+after checkpoint restoration and engine startup. Tick deltas must be finite and
+non-negative.
 
-- Mob score, munición viva, mutágenos y modo de cámara.
-- Ciclo de visitas al Shelter y mutaciones de realidad cada cuatro visitas.
-- Evolución de ADN enemigo, crisis de facción y resolución de crisis.
-- Filtros espectrales, con estado conservado entre sesiones.
+## State, history and persistence
 
-## Arquitectura
+Engine mutations are validated and produce state snapshots for subscribers.
+The event bus belongs to each engine instance, so separate sessions cannot
+receive each other's events. The game event history is capped at 256 entries;
+Paradox tactical events and crisis history have their own bounded retention.
 
-- `src/core/ParadoxOrchestrator.ts`: reglas de economía, Shelter y estado.
-- `src/core/BehaviorDNAEngine.ts`: perfiles DNA y ciclo de crisis.
-- `src/core/OrchestratorBridge.ts`: comandos tipados y transporte WebSocket opcional.
-- `src/core/ParadoxStorage.ts`: persistencia local estructurada offline-first.
-- `godot/OrchestratorVoxelBridge.gd`: punto de entrada para el renderer Godot.
+Game checkpoints are stored in IndexedDB and hashed with SHA-256. Schema 1 and
+2 checkpoints are migrated to schema 3 during restore. Legacy Paradox
+`localStorage` data is imported into the shared session and removed only after
+the migrated checkpoint has been written successfully. Persistence failures
+are surfaced to the app instead of silently ignored.
 
-El PWA funciona sin renderer conectado. La integración Godot requiere un proyecto Godot que cargue el script y exponga las escenas de juego.
+## Godot bridge
+
+`GodotBridgeSystem` forwards selected world events as JSON commands over the
+local WebSocket bridge (`ws://localhost:8080/sentra-core`). The payload format
+is `{ "type": "WORLD_STATE", "payload": { "eventType": "world:tension:changed", "revision": 7, "payload": { "tension": 42 } } }`.
+Godot validates tension and difficulty values, emits typed signals, and returns
+a `WORLD_STATE_ACK` with the event type, revision and acceptance status.
+The browser simulation remains usable when Godot is not connected.
+
+## Quality checks
+
+The local Husky pre-commit hook runs only `npm run typecheck` to keep quick
+commits lightweight. Run `npm run validate` before preparing a release; it
+also runs the core architecture tests and TypeScript/Vite production build.
+The `Build Sentra Perception PWA` workflow runs typecheck, those tests and the
+build for pushes and pull requests targeting `main`.

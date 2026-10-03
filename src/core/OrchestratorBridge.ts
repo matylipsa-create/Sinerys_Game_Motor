@@ -2,7 +2,9 @@ export type OrchestratorCommandType =
   | 'MUTATE_SPACETIME'
   | 'UPDATE_PERCEPTION'
   | 'SPAWN_MOBS'
-  | 'TRIGGER_CRISIS';
+  | 'TRIGGER_CRISIS'
+  | 'WORLD_STATE'
+  | 'WORLD_STATE_ACK';
 
 export interface OrchestratorCommand {
   type: OrchestratorCommandType;
@@ -16,12 +18,15 @@ const COMMAND_TYPES: OrchestratorCommandType[] = [
   'UPDATE_PERCEPTION',
   'SPAWN_MOBS',
   'TRIGGER_CRISIS',
+  'WORLD_STATE',
+  'WORLD_STATE_ACK',
 ];
 
 function isOrchestratorCommand(value: unknown): value is OrchestratorCommand {
-  if (!value || typeof value !== 'object') return false;
-  const command = value as Partial<OrchestratorCommand>;
-  return COMMAND_TYPES.includes(command.type as OrchestratorCommandType)
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const command = value as { type?: unknown; payload?: unknown };
+  return typeof command.type === 'string'
+    && COMMAND_TYPES.includes(command.type as OrchestratorCommandType)
     && !!command.payload
     && typeof command.payload === 'object'
     && !Array.isArray(command.payload);
@@ -49,9 +54,9 @@ export class OrchestratorBridge {
       socket.onclose = () => {
         if (this.ws === socket) this.ws = null;
       };
-    } catch {
+    } catch (error) {
       this.ws = null;
-      console.warn('SENTRA BRIDGE: Modo offline simulado activo (URL de socket no válida).');
+      console.warn('SENTRA BRIDGE: No se pudo abrir el WebSocket local; modo desconectado.', error);
     }
   }
 
@@ -63,7 +68,11 @@ export class OrchestratorBridge {
 
   public sendCommand(command: OrchestratorCommand): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(command));
+      try {
+        this.ws.send(JSON.stringify(command));
+      } catch (error) {
+        console.error(`SENTRA BRIDGE: No se pudo serializar/enviar ${command.type}.`, error);
+      }
       return;
     }
     console.info(`[Orchestrator Bridge SIM]: ${command.type}`, command.payload);
@@ -86,8 +95,8 @@ export class OrchestratorBridge {
         return;
       }
       this.listeners.forEach((listener) => listener(data));
-    } catch {
-      console.warn('SENTRA BRIDGE: No se pudo interpretar el mensaje entrante.');
+    } catch (error) {
+      console.warn('SENTRA BRIDGE: No se pudo interpretar el mensaje entrante.', error);
     }
   }
 }

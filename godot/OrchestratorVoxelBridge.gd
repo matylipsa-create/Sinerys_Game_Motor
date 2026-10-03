@@ -4,11 +4,22 @@ class_name OrchestratorVoxelBridge
 @export var voxel_multimesh_instance: MultiMeshInstance3D
 
 signal command_received(command: Dictionary)
+signal world_tension_changed(tension: float)
+signal world_difficulty_changed(band: String, scale: float)
+signal world_state_event_received(event_type: String, payload: Dictionary)
+signal perception_directive_received(payload: Dictionary)
+signal survival_directive_received(payload: Dictionary)
 
 var worker_task_id: int = -1
 var base_transforms: Array[Transform3D] = []
 var tcp_server := TCPServer.new()
 var socket_peer: WebSocketPeer
+var current_world_tension: float = 0.0
+var current_difficulty_band: String = "calm"
+var current_difficulty_scale: float = 1.0
+var mantis_filters_active: bool = false
+var suit_oxygen: float = 100.0
+var suit_radiation: float = 0.0
 
 func _ready() -> void:
 	print("GODOT ENGINE: Voxel & PointCloud Rendering Bridge initialized.")
@@ -57,10 +68,79 @@ func _handle_packet(packet_text: String) -> void:
 			var mode_index: int = camera_modes.find(mode_name)
 			if mode_index >= 0:
 				set_camera_mode(mode_index)
+			var mantis_filters: Variant = command.payload.get("mantisFiltersActive")
+			if typeof(mantis_filters) == TYPE_BOOL:
+				mantis_filters_active = mantis_filters
+			perception_directive_received.emit(command.payload)
+			var survival: Variant = command.payload.get("survival", {})
+			if survival is Dictionary:
+				_apply_survival_directive(survival)
 		"SPAWN_MOBS":
 			print("GODOT: Mob spawn command received.")
 		"TRIGGER_CRISIS":
 			print("GODOT: Crisis command received.")
+		"WORLD_STATE":
+			_handle_world_state(command.payload)
+
+func _handle_world_state(payload: Dictionary) -> void:
+	var event_type: String = str(payload.get("eventType", ""))
+	var event_payload: Variant = payload.get("payload", {})
+	if not event_payload is Dictionary:
+		send_command({
+			"type": "WORLD_STATE_ACK",
+			"payload": { "eventType": event_type, "accepted": false, "reason": "invalid-payload" }
+		})
+		return
+
+	match event_type:
+		"world:tension:changed":
+			var tension: Variant = event_payload.get("tension")
+			if typeof(tension) != TYPE_INT and typeof(tension) != TYPE_FLOAT:
+				send_command({
+					"type": "WORLD_STATE_ACK",
+					"payload": { "eventType": event_type, "accepted": false, "reason": "invalid-tension" }
+				})
+				return
+			var normalized_tension: float = clampf(float(tension), 0.0, 100.0)
+			world_tension_changed.emit(normalized_tension)
+			current_world_tension = normalized_tension
+			world_state_event_received.emit(event_type, event_payload)
+		"world:difficulty:changed":
+			var band: String = str(event_payload.get("band", ""))
+			var scale: Variant = event_payload.get("scale")
+			if band not in ["calm", "tense", "critical"] or (typeof(scale) != TYPE_INT and typeof(scale) != TYPE_FLOAT):
+				send_command({
+					"type": "WORLD_STATE_ACK",
+					"payload": { "eventType": event_type, "accepted": false, "reason": "invalid-difficulty" }
+				})
+				return
+			var normalized_scale: float = clampf(float(scale), 1.0, 2.0)
+			current_difficulty_band = band
+			current_difficulty_scale = normalized_scale
+			world_difficulty_changed.emit(band, normalized_scale)
+			world_state_event_received.emit(event_type, event_payload)
+		"world:state:changed":
+			world_state_event_received.emit(event_type, event_payload)
+		_:
+			send_command({
+				"type": "WORLD_STATE_ACK",
+				"payload": { "eventType": event_type, "accepted": false, "reason": "unsupported-event" }
+			})
+			return
+
+	send_command({
+		"type": "WORLD_STATE_ACK",
+		"payload": { "eventType": event_type, "revision": payload.get("revision", -1), "accepted": true }
+	})
+
+func _apply_survival_directive(survival: Dictionary) -> void:
+	var oxygen: Variant = survival.get("oxygen")
+	var radiation: Variant = survival.get("radiation")
+	if (typeof(oxygen) == TYPE_INT or typeof(oxygen) == TYPE_FLOAT) and is_finite(float(oxygen)):
+		suit_oxygen = clampf(float(oxygen), 0.0, 100.0)
+	if (typeof(radiation) == TYPE_INT or typeof(radiation) == TYPE_FLOAT) and is_finite(float(radiation)):
+		suit_radiation = clampf(float(radiation), 0.0, 100.0)
+	survival_directive_received.emit(survival)
 
 func send_command(command: Dictionary) -> void:
 	if socket_peer and socket_peer.get_ready_state() == WebSocketPeer.STATE_OPEN:

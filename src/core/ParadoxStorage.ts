@@ -122,6 +122,7 @@ export class ParadoxStorage {
   public static clearSave(): void {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
     } catch (error) {
       console.error('STORAGE ERROR: No se pudo borrar el estado local.', error);
     }

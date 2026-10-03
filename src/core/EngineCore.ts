@@ -18,7 +18,6 @@ export interface EngineStateChanged<TState = unknown> {
   engineId: string;
   actionType: string;
   revision: number;
-  previousState: TState;
   state: TState;
 }
 
@@ -33,6 +32,7 @@ export interface IEngineContext<TState> {
   getState(): TState;
   applyMutation(action: IMutationAction<TState>): TState;
   on<T = unknown>(type: string, handler: (event: EngineEvent<T>) => void): () => void;
+  subscribe<T = unknown>(type: string, handler: (payload: T) => void): () => void;
   emit<T>(type: string, payload: T): EngineEvent<T>;
 }
 
@@ -40,6 +40,7 @@ export interface IEngineSystem<TState = unknown> {
   readonly id: string;
   initialize?(engine: IEngineContext<TState>): void | Promise<void>;
   start?(): void | Promise<void>;
+  update?(deltaMs: number): void;
   stop?(): void | Promise<void>;
   dispose?(): void | Promise<void>;
 }

@@ -45,11 +45,12 @@ The repository now includes a TypeScript baseline that mirrors the orchestration
 * `src/components/ParadoxBaselinePanel.tsx`: operational dashboard for the home page and debug sandbox
 * Route `/paradox-baseline`: direct access to the technical baseline panel
 
-For the web application, `GameEngineCore` is the single owner of the in-memory
-Conquer and Paradox session state. The visual orchestrator, camera director,
-strategic crisis director, and multiversal drift manager provide stateless
-rules; UI components read snapshots and submit actions through that shared
-engine instance.
+For the web application, `ConquerOrchestrator` is the single owner of the
+in-memory Conquer and Paradox session state, including the 15-floor dungeon.
+`EngineOrchestrator` supplies the generic lifecycle, instance-scoped event bus,
+mutation handling and simulation clock; `GameEngineCore` is a compatibility
+adapter only. Visual, camera, strategic crisis and reality rules are integrated
+with that shared session rather than running a parallel game engine.
 
 ## 8. Operational Notes
 
@@ -57,9 +58,20 @@ The web version does not replace Godot; it acts as a high-fidelity design and si
 
 ## 9. Current State
 
-The web baseline keeps session data in `GameEngineCore`; feature modules do not
-retain a parallel copy of the session. The rules remain modular so they can be
-reused for:
+The app starts a single `tick(deltaMs)` loop after restoring its IndexedDB
+checkpoint. Paradox survival and registered world systems advance from that
+loop. Checkpoint schemas 1 and 2 migrate to schema 3, including legacy Paradox
+`localStorage` saves; the old save is cleared only after the migrated checkpoint
+is persisted successfully. Game event history is bounded to 256 records.
+
+The Godot WebSocket bridge exchanges JSON `WORLD_STATE` commands and
+`WORLD_STATE_ACK` responses. The Godot receiver validates and emits tension,
+difficulty and world-state signals without making the web simulation depend on
+a connected renderer.
+
+Run `npm run validate` to execute the core architecture tests and production
+build. CI runs typecheck, tests and build on pull requests and pushes to `main`.
+The rules remain modular so they can be reused for:
 
 * tactical decision loops
 * procedural mutation events

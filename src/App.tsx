@@ -1,12 +1,10 @@
 import { lazy, startTransition, Suspense, useEffect, useRef, useState } from 'react';
 import type { ConquerOrchestrator } from './core/ConquerOrchestrator';
 import type { GameSessionExport, OrchestratorBridge, PartyChoice, PartyMember } from './core/game/OrchestratorBridge';
-import type { WorldResponderSystem } from './core/game/WorldResponderSystem';
 import type { PlayerIntent } from './core/game/PlayerIntent';
 import { InterfaceSettings } from './components/InterfaceSettings';
 import { ConquerHome } from './components/ConquerHome';
 import { ParadoxBaselinePanel } from './components/ParadoxBaselinePanel';
-import { GameEngineCore } from './core/GameEngineCore';
 
 const SentraCoreDashboard = lazy(() => import('./components/SentraCoreDashboard').then((module) => ({
   default: module.SentraCoreDashboard,
@@ -21,7 +19,6 @@ const ParadoxPlayground = lazy(() => import('./components/ParadoxPlayground').th
   default: module.ParadoxPlayground,
 })));
 
-const SIMULATION_TICK_MS = 1000 / 60;
 const PARTY_CHANNEL = 'fall-of-zion-party-alpha';
 
 const STARTING_PARTY: PartyMember[] = [
@@ -44,35 +41,39 @@ const STARTING_PARTY: PartyMember[] = [
 
 interface GameRuntime {
   engine: ConquerOrchestrator;
-  worldResponder: WorldResponderSystem;
+  paradox: import('./core/ParadoxOrchestrator').ParadoxOrchestratorEngine;
   bridge: OrchestratorBridge;
   peerConnections: Set<RTCPeerConnection>;
   peerDisconnectors: Set<() => void>;
-  activeEffects: number;
   lifecycleQueue: Promise<void>;
   restorePromise: Promise<boolean> | null;
 }
 
 async function createGameRuntime(): Promise<GameRuntime> {
-  const [{ ConquerOrchestrator }, { OrchestratorBridge }, { WorldResponderSystem }, { SentraCoreArenaManager }] = await Promise.all([
+  const [{ ConquerOrchestrator }, { OrchestratorBridge }, { WorldResponderSystem }, { GodotBridgeSystem }, { SentraCoreArenaManager }, { ParadoxOrchestratorEngine }] = await Promise.all([
     import('./core/ConquerOrchestrator'),
     import('./core/game/OrchestratorBridge'),
     import('./core/game/WorldResponderSystem'),
+    import('./core/game/GodotBridgeSystem'),
     import('./pwa/arena/SentraCoreArena'),
+    import('./core/ParadoxOrchestrator'),
   ]);
   const engine = new ConquerOrchestrator('fall-of-zion-party-alpha');
   const worldResponder = new WorldResponderSystem();
+  const godotBridge = new GodotBridgeSystem();
+  const paradox = new ParadoxOrchestratorEngine(engine);
   engine.registerSystem(worldResponder);
+  engine.registerSystem(godotBridge);
+  engine.registerSystem(paradox);
   const bridge = new OrchestratorBridge(engine);
   bridge.initializeParty(STARTING_PARTY);
   bridge.initializeArenaState(SentraCoreArenaManager.initializeBattleRoom());
   return {
     engine,
-    worldResponder,
+    paradox,
     bridge,
     peerConnections: new Set(),
     peerDisconnectors: new Set(),
-    activeEffects: 0,
     lifecycleQueue: Promise.resolve(),
     restorePromise: null,
   };
@@ -95,12 +96,11 @@ function waitForIceGatheringComplete(connection: RTCPeerConnection): Promise<voi
   });
 }
 
-function GameRoute({ onBack, runtime, onPersistenceError }: {
+function GameRoute({ onBack, runtime }: {
   onBack: () => void;
   runtime: GameRuntime;
-  onPersistenceError: (message: string) => void;
 }) {
-  const { engine, worldResponder, bridge } = runtime;
+  const { engine, bridge } = runtime;
   const [gameState, setGameState] = useState(() => bridge.getGameState());
   const [activeMemberId, setActiveMemberId] = useState(STARTING_PARTY[0].id);
   const [peerSignalInput, setPeerSignalInput] = useState('');
@@ -114,8 +114,6 @@ function GameRoute({ onBack, runtime, onPersistenceError }: {
   ]);
 
   useEffect(() => {
-    let active = true;
-    let frameId = 0;
     const disconnectParty = bridge.connectLocalParty(PARTY_CHANNEL);
     const unsubscribe = bridge.subscribeRenderer((message) => {
       setGameState(bridge.getGameState());
@@ -129,44 +127,16 @@ function GameRoute({ onBack, runtime, onPersistenceError }: {
         setNarrative((entries) => [...entries, `CORO / crescendo: «La torre se tensa (${String(payload.currentTension ?? '?')}/100).»`].slice(-12));
       }
     });
-    const tick = () => {
-      if (!active) return;
-      engine.time.advance(SIMULATION_TICK_MS);
-      worldResponder.update();
-      frameId = window.requestAnimationFrame(tick);
-    };
-
-    runtime.activeEffects += 1;
-    const startPromise = runtime.lifecycleQueue.then(() => engine.start());
-    runtime.lifecycleQueue = startPromise.catch((error: unknown) => {
-      if (active) onPersistenceError(`No se pudo iniciar el motor: ${error instanceof Error ? error.message : String(error)}`);
-    });
-    void startPromise.then(() => {
-      if (active) frameId = window.requestAnimationFrame(tick);
-    }, (error: unknown) => {
-      if (active) onPersistenceError(`No se pudo iniciar el motor: ${error instanceof Error ? error.message : String(error)}`);
-    });
     return () => {
-      active = false;
-      runtime.activeEffects -= 1;
-      window.cancelAnimationFrame(frameId);
       unsubscribe();
       disconnectParty();
-      if (runtime.activeEffects === 0) {
-        for (const disconnect of runtime.peerDisconnectors) disconnect();
-        runtime.peerDisconnectors.clear();
-        bridge.closePartyConnections();
-        for (const peer of runtime.peerConnections) peer.close();
-        runtime.peerConnections.clear();
-        const stopPromise = runtime.lifecycleQueue.then(() => {
-          if (runtime.activeEffects === 0) return engine.stop();
-        });
-        runtime.lifecycleQueue = stopPromise.catch((error: unknown) => {
-          console.error('[GameRoute] No se pudo detener el motor:', error);
-        });
-      }
+      for (const disconnect of runtime.peerDisconnectors) disconnect();
+      runtime.peerDisconnectors.clear();
+      bridge.closePartyConnections();
+      for (const peer of runtime.peerConnections) peer.close();
+      runtime.peerConnections.clear();
     };
-  }, [bridge, engine, onPersistenceError, runtime, worldResponder]);
+  }, [bridge, engine, runtime]);
 
   const selectedMember = gameState.partyState.members.find((member) => member.id === activeMemberId)
     ?? gameState.partyState.members[0];
@@ -407,11 +377,12 @@ function GameRoute({ onBack, runtime, onPersistenceError }: {
 
 export default function App() {
   const [route, setRoute] = useState(getRoute);
-  const [baselineEngine] = useState(() => new GameEngineCore());
   const [runtime, setRuntime] = useState<GameRuntime | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
-  const [hasVisitedOrchestrator, setHasVisitedOrchestrator] = useState(() => getRoute() === '/core');
+  const [hasVisitedOrchestrator, setHasVisitedOrchestrator] = useState(
+    () => ['/core', '/paradox', '/paradox-baseline'].includes(getRoute()),
+  );
   const runtimeLoadPromise = useRef<Promise<GameRuntime> | null>(null);
 
   useEffect(() => {
@@ -428,7 +399,8 @@ export default function App() {
   }, [hasVisitedOrchestrator, route]);
 
   useEffect(() => {
-    if ((route !== '/game' && route !== '/arena') || !hasVisitedOrchestrator || runtime) return;
+    const requiresRuntime = ['/game', '/arena', '/paradox', '/paradox-baseline'].includes(route);
+    if (!requiresRuntime || !hasVisitedOrchestrator || runtime) return;
     let active = true;
     runtimeLoadPromise.current ??= createGameRuntime();
     void runtimeLoadPromise.current.then((createdRuntime) => {
@@ -467,22 +439,65 @@ export default function App() {
       active = false;
       unsubscribe();
       runtime.bridge.closePartyConnections();
-      const stopPromise = runtime.lifecycleQueue.then(() => runtime.engine.stop());
-      runtime.lifecycleQueue = stopPromise.catch((error: unknown) => {
-        console.error('[App] No se pudo detener el motor:', error);
-      });
     };
   }, [runtime]);
+
+  useEffect(() => {
+    if (!runtime || !sessionReady || !['/game', '/arena', '/paradox', '/paradox-baseline'].includes(route)) return;
+    let active = true;
+    let frameId = 0;
+    let previousFrameAt: number | null = null;
+    const tick = (frameAt: number) => {
+      if (!active) return;
+      if (previousFrameAt !== null) {
+        try {
+          runtime.engine.tick(frameAt - previousFrameAt);
+        } catch (error) {
+          active = false;
+          setPersistenceError(`Falló la simulación del motor: ${error instanceof Error ? error.message : String(error)}`);
+          return;
+        }
+      }
+      previousFrameAt = frameAt;
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    const startPromise = runtime.lifecycleQueue.then(() => runtime.engine.start());
+    runtime.lifecycleQueue = startPromise.then(
+      () => undefined,
+      (error: unknown) => {
+        if (active) setPersistenceError(`No se pudo iniciar el motor: ${error instanceof Error ? error.message : String(error)}`);
+      },
+    );
+    void startPromise.then(
+      () => {
+        if (active) frameId = window.requestAnimationFrame(tick);
+      },
+      () => undefined,
+    );
+
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frameId);
+      const stopPromise = runtime.lifecycleQueue.then(() => runtime.engine.stop());
+      runtime.lifecycleQueue = stopPromise.then(
+        () => undefined,
+        (error: unknown) => {
+          console.error('[App] No se pudo detener el motor:', error);
+        },
+      );
+    };
+  }, [route, runtime, sessionReady]);
 
   const navigate = (nextRoute: string) => {
     const requiresOrchestrator = (nextRoute === '/game' || nextRoute === '/arena') && route !== '/core';
     const destination = requiresOrchestrator ? '/core' : nextRoute;
-    if (destination === '/core') setHasVisitedOrchestrator(true);
+    if (['/core', '/paradox', '/paradox-baseline'].includes(destination)) setHasVisitedOrchestrator(true);
     window.history.pushState({}, '', destination);
     startTransition(() => setRoute(destination));
   };
 
-  if (route === '/game' || route === '/arena') {
+  if (['/game', '/arena', '/paradox', '/paradox-baseline'].includes(route)) {
     if (persistenceError) {
       return (
         <main className="min-h-screen bg-[#0b0d0c] px-6 py-20 font-mono text-zinc-100">
@@ -502,7 +517,7 @@ export default function App() {
 
   if (route === '/game') {
     if (!runtime) return null;
-    return <GameRoute onBack={() => navigate('/')} runtime={runtime} onPersistenceError={setPersistenceError} />;
+    return <GameRoute onBack={() => navigate('/')} runtime={runtime} />;
   }
 
   if (route === '/arena') {
@@ -515,6 +530,7 @@ export default function App() {
   }
 
   if (route === '/paradox') {
+    if (!runtime) return null;
     return (
       <>
         <InterfaceSettings />
@@ -524,13 +540,14 @@ export default function App() {
           </button>
         </nav>
         <Suspense fallback={<main className="min-h-screen bg-[#0b0d0c] p-8 text-zinc-100" role="status">Cargando panel…</main>}>
-          <ParadoxPlayground />
+          <ParadoxPlayground orchestrator={runtime.paradox} />
         </Suspense>
       </>
     );
   }
 
   if (route === '/paradox-baseline') {
+    if (!runtime) return null;
     return (
       <>
         <InterfaceSettings />
@@ -539,7 +556,7 @@ export default function App() {
             VOLVER A CONQUER
           </button>
         </nav>
-        <ParadoxBaselinePanel engine={baselineEngine} />
+        <ParadoxBaselinePanel engine={runtime.engine} />
       </>
     );
   }

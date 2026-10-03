@@ -39,6 +39,7 @@ export class EngineOrchestrator<TState extends object>
   private static engineSequence = 0;
   readonly engineId = `engine-${++EngineOrchestrator.engineSequence}`;
   readonly time = new TimeManager();
+  private readonly eventBus = new EventBus();
   private state: TState;
   private revision = 0;
   private eventSequence = 0;
@@ -76,7 +77,7 @@ export class EngineOrchestrator<TState extends object>
     this.revision += 1;
     const revision = this.revision;
     const snapshot = this.getState();
-    EventBus.emit('engine:mutation', {
+    this.eventBus.emit('engine:mutation', {
       engineId: this.engineId,
       actionType: action.type,
       revision,
@@ -85,10 +86,9 @@ export class EngineOrchestrator<TState extends object>
       engineId: this.engineId,
       actionType: action.type,
       revision,
-      previousState: clone(previousState),
       state: snapshot,
     };
-    EventBus.emit(`engine:state:changed:${action.type}`, stateChange);
+    this.eventBus.emit(`engine:state:changed:${action.type}`, stateChange);
     return snapshot;
   }
 
@@ -131,6 +131,15 @@ export class EngineOrchestrator<TState extends object>
     this.lifecycle = 'stopped';
   }
 
+  tick(deltaMs: number): number {
+    if (this.lifecycle !== 'running') {
+      throw new Error('Engine must be running before it can tick.');
+    }
+    const simulationTime = this.time.advance(deltaMs);
+    for (const system of this.systems.values()) system.update?.(deltaMs);
+    return simulationTime;
+  }
+
   async dispose(): Promise<void> {
     if (this.lifecycle === 'disposed') return;
     let failure: unknown;
@@ -149,12 +158,17 @@ export class EngineOrchestrator<TState extends object>
     this.systems.clear();
     this.initializedSystems.clear();
     this.startedSystems.clear();
+    this.eventBus.clear();
     this.lifecycle = 'disposed';
     if (failure) throw failure;
   }
 
   on<T = unknown>(type: string, handler: (event: EngineEvent<T>) => void): () => void {
-    return EventBus.on<EngineEvent<T>>(type, handler);
+    return this.eventBus.on<EngineEvent<T>>(type, handler);
+  }
+
+  subscribe<T = unknown>(type: string, handler: (payload: T) => void): () => void {
+    return this.eventBus.on<T>(type, handler);
   }
 
   emit<T>(type: string, payload: T): EngineEvent<T> {
@@ -178,8 +192,8 @@ export class EngineOrchestrator<TState extends object>
       if (this.eventSequence === event.sequence) this.eventSequence = previousSequence;
       throw error;
     }
-    EventBus.emit(type, cloneEvent(event));
-    EventBus.emit('engine:event', {
+    this.eventBus.emit(type, cloneEvent(event));
+    this.eventBus.emit('engine:event', {
       engineId: this.engineId,
       event: cloneEvent(event),
       revision: this.revision,

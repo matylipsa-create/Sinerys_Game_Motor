@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { bridge } from '../core/OrchestratorBridge';
 import {
-  globalOrchestrator,
+  type ParadoxOrchestratorEngine,
   type PlayerState,
   type TacticalEvent,
 } from '../core/ParadoxOrchestrator';
@@ -11,111 +11,106 @@ import './ParadoxPlayground.css';
 const MUTAGEN_ID = 'MYCELIUM_SYNTH_V2';
 const MUTAGEN_COST = 450;
 
-export function ParadoxPlayground() {
-  const [gameState, setGameState] = useState<PlayerState>(() => globalOrchestrator.getState());
-  const [events, setEvents] = useState<TacticalEvent[]>(() => globalOrchestrator.getEvents());
-  const [activeCrises, setActiveCrises] = useState<FactionCrisis[]>(() => globalOrchestrator.getActiveCrises());
+interface Props {
+  orchestrator: ParadoxOrchestratorEngine;
+}
+
+export function ParadoxPlayground({ orchestrator }: Props) {
+  const [gameState, setGameState] = useState<PlayerState>(() => orchestrator.getState());
+  const [events, setEvents] = useState<TacticalEvent[]>(() => orchestrator.getEvents());
+  const [activeCrises, setActiveCrises] = useState<FactionCrisis[]>(() => orchestrator.getActiveCrises());
   const [logMessage, setLogMessage] = useState('PARADOX BOOT // STATION 07. AIRLOCK SEAL FAILURE DETECTED.');
 
   useEffect(() => {
-    bridge.connect();
     const unsubscribe = bridge.subscribe((command) => {
-      globalOrchestrator.applyRendererCommand(command);
-      setGameState(globalOrchestrator.getState());
-      setEvents(globalOrchestrator.getEvents());
-      setActiveCrises(globalOrchestrator.getActiveCrises());
+      orchestrator.applyRendererCommand(command);
+      setGameState(orchestrator.getState());
+      setEvents(orchestrator.getEvents());
+      setActiveCrises(orchestrator.getActiveCrises());
       setLogMessage(`RENDERER // ${command.type.replace(/_/g, ' ')} RECEIVED`);
     });
     return () => {
       unsubscribe();
-      bridge.disconnect();
     };
-  }, []);
+  }, [orchestrator]);
 
-  useEffect(() => {
-    const tickTimer = window.setInterval(() => {
-      const nextState = globalOrchestrator.tickSurvival();
-      setGameState(nextState);
-      setEvents(globalOrchestrator.getEvents());
-      setLogMessage(nextState.survival.status === 'FAILED'
-        ? 'SUIT FAILURE // CYCLE TERMINATED'
-        : `SUIT TICK ${nextState.survival.ticksSurvived} // LIFE SUPPORT ACTIVE`);
-      if (nextState.survival.status === 'FAILED') window.clearInterval(tickTimer);
-    }, 5000);
-    return () => window.clearInterval(tickTimer);
-  }, []);
+  useEffect(() => orchestrator.subscribe(() => {
+    setGameState(orchestrator.getState());
+    setEvents(orchestrator.getEvents());
+    setActiveCrises(orchestrator.getActiveCrises());
+  }), [orchestrator]);
 
   const refresh = (message: string) => {
-    setGameState(globalOrchestrator.getState());
-    setEvents(globalOrchestrator.getEvents());
-    setActiveCrises(globalOrchestrator.getActiveCrises());
+    setGameState(orchestrator.getState());
+    setEvents(orchestrator.getEvents());
+    setActiveCrises(orchestrator.getActiveCrises());
     setLogMessage(message);
   };
 
   const handleShelter = () => {
-    const result = globalOrchestrator.visitShelter();
+    const result = orchestrator.visitShelter();
     refresh(result.mutated
       ? `SPACETIME MUTATION // REALITY TIER ${result.state.realityTier}`
       : `SHELTER REGISTERED // ${result.state.shelterVisits % 4}/4 TO MUTATION`);
   };
 
   const handleAmmo = () => {
-    const success = globalOrchestrator.purchaseLivingAmmo(300);
+    const success = orchestrator.purchaseLivingAmmo(300);
     refresh(success ? 'ECONOMY // 10 LIVING ROUNDS ACQUIRED' : 'ECONOMY // INSUFFICIENT MOB SCORE');
   };
 
   const handleMutagen = () => {
-    const success = globalOrchestrator.purchaseMutagen(MUTAGEN_ID, MUTAGEN_COST);
+    const success = orchestrator.purchaseMutagen(MUTAGEN_ID, MUTAGEN_COST);
     refresh(success ? `MUTAGEN // ${MUTAGEN_ID} ACQUIRED` : 'MUTAGEN // PURCHASE UNAVAILABLE');
   };
 
   const handleKill = () => {
-    globalOrchestrator.registerMobKill(120);
+    orchestrator.registerMobKill(120);
     refresh('COMBAT // TARGET ELIMINATED. +120 MOB SCORE');
   };
 
   const handleCamera = () => {
-    const mode = globalOrchestrator.toggleCameraMode();
+    const mode = orchestrator.toggleCameraMode();
     refresh(`CAMERA // ${mode.replace(/_/g, ' ')} ACTIVE`);
   };
 
   const handleMantis = () => {
-    const active = globalOrchestrator.toggleMantisFilters();
+    const active = orchestrator.toggleMantisFilters();
     refresh(`MANTIS PERCEPTION // ${active ? 'ENGAGED' : 'DISENGAGED'}`);
   };
 
   const handleFaction = () => {
     const faction = gameState.realityTier % 2 === 0 ? 'ASHEN COLLECTIVE' : 'VERDIGRIS SYNDICATE';
-    globalOrchestrator.registerFactionEvent(faction, 'territorial activity detected near the Shelter.');
+    orchestrator.registerFactionEvent(faction, 'territorial activity detected near the Shelter.');
     refresh(`FACTION EVENT // ${faction} ACTIVITY DETECTED`);
   };
 
   const handleCrisis = () => {
-    globalOrchestrator.registerCrisisEvent('Containment breach reported. Crisis response required.');
+    orchestrator.registerCrisisEvent('Containment breach reported. Crisis response required.');
     refresh('CRISIS EVENT // CONTAINMENT BREACH REPORTED');
   };
 
   const handleResolveCrisis = (crisisId: string) => {
-    if (globalOrchestrator.resolveCrisis(crisisId)) refresh('CRISIS // RESOLUTION REGISTERED');
+    if (orchestrator.resolveCrisis(crisisId)) refresh('CRISIS // RESOLUTION REGISTERED');
   };
 
   const handleOxygenRefill = () => {
-    const success = globalOrchestrator.refillOxygen();
+    const success = orchestrator.refillOxygen();
     refresh(success ? 'SUIT SYSTEMS // OXYGEN RESERVE +30%' : 'SUIT SYSTEMS // OXYGEN REFILL UNAVAILABLE');
   };
 
   const handleMutagenDose = () => {
-    const success = globalOrchestrator.useMutagenCharge();
+    const success = orchestrator.useMutagenCharge();
     refresh(success ? 'SUIT SYSTEMS // RADIATION BUFFER RESTORED' : 'SUIT SYSTEMS // NO MUTAGEN DOSE AVAILABLE');
   };
 
   const handleMutagenSupply = () => {
-    const success = globalOrchestrator.purchaseMutagenCharges();
+    const success = orchestrator.purchaseMutagenCharges();
     refresh(success ? 'SUIT SYSTEMS // TWO MUTAGEN DOSES ACQUIRED' : 'SUIT SYSTEMS // INSUFFICIENT MOB SCORE');
   };
 
   const handleRestartRun = () => {
-    globalOrchestrator.restartSurvivalRun();
+    orchestrator.restartSurvivalRun();
     refresh('PARADOX BOOT // NEW SUIT CYCLE INITIALIZED');
   };
 

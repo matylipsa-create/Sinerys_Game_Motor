@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import {
+  CameraDirector,
   MantisSpectrumProfile,
   type Playstyle,
 } from '../core/ParadoxVisualEngine';
-import type { GameEngineCore } from '../core/GameEngineCore';
+import type { ConquerOrchestrator } from '../core/ConquerOrchestrator';
 
 const playstyleOptions: Playstyle[] = ['aggressive', 'tactical', 'passive'];
+const cameraDirector = new CameraDirector();
 
 interface Props {
-  engine: GameEngineCore;
+  engine: ConquerOrchestrator;
 }
 
 export function ParadoxBaselinePanel({ engine }: Props) {
   const [, setRefresh] = useState(0);
 
   const session = engine.getState();
-  const snapshot = session.paradox;
+  const snapshot = session.paradoxVisual;
   const shaderProfile = MantisSpectrumProfile.fromState(snapshot.currentPlaystyle, snapshot.currentRealityTier);
 
   const refresh = () => setRefresh((value) => value + 1);
@@ -76,7 +78,7 @@ export function ParadoxBaselinePanel({ engine }: Props) {
                 Registrar visita al refugio
               </button>
               <button type="button" onClick={handleCameraCycle} style={secondaryButtonStyle}>
-                Cambiar cámara: {engine.cameraDirector.getModeLabel(session.cameraMode)}
+                Cambiar cámara: {cameraDirector.getModeLabel(session.cameraMode)}
               </button>
             </div>
 
@@ -112,7 +114,7 @@ export function ParadoxBaselinePanel({ engine }: Props) {
               <p style={{ margin: 0, color: '#9adfd0', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
                 Active mode
               </p>
-              <p style={{ margin: '12px 0 0', fontSize: 25, fontWeight: 700 }}>{engine.cameraDirector.getModeLabel(session.cameraMode)}</p>
+              <p style={{ margin: '12px 0 0', fontSize: 25, fontWeight: 700 }}>{cameraDirector.getModeLabel(session.cameraMode)}</p>
             </div>
           </div>
         </section>
