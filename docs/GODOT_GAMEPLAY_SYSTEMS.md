@@ -222,6 +222,49 @@ optional and does not alter physics/collision layers. Scene entities that need
 independent status silhouettes should use a dedicated mask/material pass
 rather than treating screen-wide tension as per-entity data.
 
+## Pixel-art toon materials (Compatibility / GLES 3)
+
+Use `godot/shaders/pixel_toon_compat.gdshader` for the low-cost material path.
+It makes one nearest-filtered albedo lookup, quantizes `NORMAL · LIGHT` into
+three hard bands, uses shadow/midtone/light tints and adds a small shadow fill.
+There are no normal maps, screen/depth reads, derivatives, loops or
+per-fragment trigonometry. Keep `mid_threshold < lit_threshold`. Use alpha
+scissor for cutout atlases; fully opaque textures can leave their alpha at 1.
+
+For outlines, use `pixel_toon_outline.gdshader` on a second `MeshInstance3D`
+that shares the original mesh and follows the same transform/skeleton. Set
+its `ShaderMaterial.render_priority` below the surface material (for example,
+-1), turn off shadow casting on the outline instance, and tune
+`outline_width` in local mesh units. This inverted-hull pass is an extra draw
+call but performs no texture reads. Prefer it for hero/foreground meshes; on
+large voxel populations use shared `MultiMesh` geometry or omit the outline
+pass to avoid fill-rate and draw-call costs. Uniform mesh scale gives the most
+consistent outline width; non-uniform scale distorts the expansion.
+
+Texture and viewport setup for crisp pixels:
+
+- Assign an albedo image to `albedo_texture`; the shader sampler explicitly
+  uses `filter_nearest`. For atlases, keep UVs inside padded regions because
+  the sampler repeats at texture boundaries.
+- Disable mipmaps on tiny pixel-art tiles to preserve exact texels. This can
+  shimmer at distance; if that becomes objectionable, use a separately
+  authored pixel-style mip chain rather than bilinear filtering.
+- Keep textures small and atlas compatible assets. On a 32 MiB target, make a
+  measured texture/framebuffer/mesh budget; 256x256 RGBA8 is about 256 KiB
+  before driver overhead, while lossy ETC2 saves memory but can introduce
+  block artifacts into pixel art. Use ETC2 only where visual testing allows.
+- Disable 3D MSAA and avoid stacking the screen-space Mantis post-process on
+  this low-end profile. For a strict pixel grid, render the 3D scene to a
+  low-resolution viewport and scale by an integer with nearest filtering.
+- Keep shadow-casting lights and voxel material variants limited. The custom
+  `light()` function still runs per affecting light; use a small number of
+  local lights and bake/fake ambient fill for static scenes.
+
+The shader reduces texture and fragment work, but it cannot guarantee that an
+entire Godot project stays within a 32 MiB VRAM budget or a frame-time target.
+Measure the Compatibility renderer on the actual GPU, especially with the
+outline pass and shadowed lights enabled.
+
 ## Deterministic dungeon contract
 
 `DungeonGenerationRequest` contains seed, room count, corruption, current
