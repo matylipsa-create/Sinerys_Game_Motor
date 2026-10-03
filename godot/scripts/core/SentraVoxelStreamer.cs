@@ -28,7 +28,7 @@ public partial class SentraVoxelStreamer : Node3D
     public delegate void StreamBuildFailedEventHandler(int generation, string message);
 
     [Export]
-    public NodePath BridgePath { get; set; } = new NodePath("../OrchestratorVoxelBridge");
+    public NodePath BridgePath { get; set; } = new NodePath("../SentraVoxelBridge");
 
     [Export]
     public NodePath ChunksRootPath { get; set; } = new NodePath(".");

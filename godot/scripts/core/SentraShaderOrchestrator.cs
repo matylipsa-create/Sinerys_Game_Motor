@@ -30,6 +30,8 @@ public partial class SentraShaderOrchestrator : Node
 
     private SentraCoreEngine _sentraCore;
     private Node _mantisPostProcess;
+    private SentraOrchestratorBridge _orchestratorBridge;
+    private Callable _globalTensionCallable;
     private float _lastTension = -1f;
 
     public override void _Ready()
@@ -38,6 +40,18 @@ public partial class SentraShaderOrchestrator : Node
             _sentraCore = GetNodeOrNull<SentraCoreEngine>(SentraCorePath);
         if (!MantisPostProcessPath.IsEmpty)
             _mantisPostProcess = GetNodeOrNull<Node>(MantisPostProcessPath);
+
+        _orchestratorBridge = SentraOrchestratorBridge.Instance;
+        if (_orchestratorBridge != null)
+        {
+            _globalTensionCallable = Callable.From<float>(OnGlobalCrisisTension);
+            Error connectResult = _orchestratorBridge.Connect(
+                "crisis_tension",
+                _globalTensionCallable);
+            if (connectResult != Error.Ok)
+                GD.PushError($"SentraShaderOrchestrator: failed to connect global tension signal: {connectResult}.");
+            ApplyTension(_orchestratorBridge.CrisisTension);
+        }
 
         if (_sentraCore != null)
         {
@@ -52,11 +66,20 @@ public partial class SentraShaderOrchestrator : Node
     {
         if (_sentraCore != null)
             _sentraCore.CrisisSnapshotPublished -= OnCrisisSnapshotPublished;
+        if (_orchestratorBridge != null
+            && GodotObject.IsInstanceValid(_orchestratorBridge)
+            && _orchestratorBridge.IsConnected("crisis_tension", _globalTensionCallable))
+            _orchestratorBridge.Disconnect("crisis_tension", _globalTensionCallable);
     }
 
     private void OnCrisisSnapshotPublished(CrisisSnapshot snapshot)
     {
         ApplyTension(snapshot.Tension);
+    }
+
+    private void OnGlobalCrisisTension(float tension)
+    {
+        ApplyTension(tension);
     }
 
     private void ApplyTension(float tension)
@@ -65,6 +88,10 @@ public partial class SentraShaderOrchestrator : Node
         tension = Mathf.Clamp(tension, 0f, 1f);
         if (Mathf.Abs(tension - _lastTension) < 0.005f) return;
         _lastTension = tension;
+        if (_orchestratorBridge != null
+            && GodotObject.IsInstanceValid(_orchestratorBridge)
+            && Mathf.Abs(tension - _orchestratorBridge.CrisisTension) >= 0.005f)
+            _orchestratorBridge.SetCrisisTension(tension);
 
         float shadowLevel = Mathf.Lerp(0.3f, 0.2f, tension);
         float midThreshold = Mathf.Lerp(0.32f, 0.24f, tension);

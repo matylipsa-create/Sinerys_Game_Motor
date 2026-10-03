@@ -6,11 +6,17 @@ public partial class SentraCharacterController : CharacterBody3D
     [Signal]
     public delegate void MovementStateChangedEventHandler(int state);
 
+    [Signal]
+    public delegate void JumpedEventHandler();
+
+    [Export]
+    public NodePath CameraPivotPath { get; set; } = new NodePath("CameraPivot");
+
     [Export]
     public NodePath SentraCorePath { get; set; } = new NodePath("../SentraCoreEngine");
 
     [Export]
-    public NodePath VoxelBridgePath { get; set; } = new NodePath("../OrchestratorVoxelBridge");
+    public NodePath VoxelBridgePath { get; set; } = new NodePath("../SentraVoxelBridge");
 
     [Export]
     public NodePath AttackRayPath { get; set; } = new NodePath("AttackRay");
@@ -29,6 +35,18 @@ public partial class SentraCharacterController : CharacterBody3D
 
     [Export(PropertyHint.Range, "0.1,60,0.1")]
     public float AirAcceleration { get; set; } = 7f;
+
+    [Export(PropertyHint.Range, "0.1,30,0.1")]
+    public float JumpVelocity { get; set; } = 7f;
+
+    [Export(PropertyHint.Range, "0.01,1,0.01")]
+    public float MouseSensitivity { get; set; } = 0.12f;
+
+    [Export(PropertyHint.Range, "-89,0,1")]
+    public float MinimumPitchDegrees { get; set; } = -80f;
+
+    [Export(PropertyHint.Range, "0,89,1")]
+    public float MaximumPitchDegrees { get; set; } = 80f;
 
     [Export(PropertyHint.Range, "0.1,100,0.1")]
     public float GravityMagnitude { get; set; } = 24f;
@@ -70,6 +88,9 @@ public partial class SentraCharacterController : CharacterBody3D
     public string MoveBackAction { get; set; } = "ui_down";
 
     [Export]
+    public string JumpAction { get; set; } = "jump";
+
+    [Export]
     public string RunAction { get; set; } = "sprint";
 
     [Export]
@@ -82,11 +103,13 @@ public partial class SentraCharacterController : CharacterBody3D
 
     private SentraCoreEngine _sentraCore;
     private Node _voxelBridge;
+    private Node3D _cameraPivot;
     private RayCast3D _attackRay;
     private StringName _moveLeft;
     private StringName _moveRight;
     private StringName _moveForward;
     private StringName _moveBack;
+    private StringName _jumpAction;
     private StringName _runAction;
     private StringName _dodgeAction;
     private StringName _attackAction;
@@ -117,10 +140,13 @@ public partial class SentraCharacterController : CharacterBody3D
         _moveRight = new StringName(MoveRightAction);
         _moveForward = new StringName(MoveForwardAction);
         _moveBack = new StringName(MoveBackAction);
+        _jumpAction = new StringName(JumpAction);
         _runAction = new StringName(RunAction);
         _dodgeAction = new StringName(DodgeAction);
         _attackAction = new StringName(AttackAction);
         GravityMagnitude = Mathf.Max(0.1f, GravityMagnitude);
+        MinimumPitchDegrees = Mathf.Clamp(MinimumPitchDegrees, -89f, 0f);
+        MaximumPitchDegrees = Mathf.Clamp(MaximumPitchDegrees, 0f, 89f);
         TelemetryInterval = Mathf.Max(0.02f, TelemetryInterval);
         FloorMaxAngle = Mathf.DegToRad(50f);
         FloorSnapLength = 0.25f;
@@ -130,7 +156,19 @@ public partial class SentraCharacterController : CharacterBody3D
         if (!SentraCorePath.IsEmpty)
             _sentraCore = GetNodeOrNull<SentraCoreEngine>(SentraCorePath);
         if (!VoxelBridgePath.IsEmpty)
-            _voxelBridge = GetNodeOrNull<Node>(VoxelBridgePath);
+        {
+            _voxelBridge = GetNodeOrNull<SentraVoxelBridge>(VoxelBridgePath);
+            if (_voxelBridge == null)
+                GD.PushWarning("SentraCharacterController: VoxelBridgePath did not resolve to SentraVoxelBridge.");
+        }
+        if (!CameraPivotPath.IsEmpty)
+        {
+            _cameraPivot = GetNodeOrNull<Node3D>(CameraPivotPath);
+            if (_cameraPivot == null)
+                GD.PushWarning("SentraCharacterController: CameraPivotPath did not resolve; vertical mouse look is disabled.");
+        }
+
+        Input.MouseMode = Input.MouseModeEnum.Captured;
 
         _attackRay = GetNodeOrNull<RayCast3D>(AttackRayPath);
         if (_attackRay == null)
@@ -151,6 +189,14 @@ public partial class SentraCharacterController : CharacterBody3D
         _physicsTick++;
         UpdateTimers(dt);
 
+        if (IsOnFloor() && WasActionPressed(_jumpAction))
+        {
+            Vector3 jumpVelocity = Velocity;
+            jumpVelocity.Y = Mathf.Max(0.1f, JumpVelocity);
+            Velocity = jumpVelocity;
+            EmitSignal(SignalName.Jumped);
+        }
+
         Vector2 input = ReadMovementInput();
         Vector3 right = GlobalBasis.X;
         Vector3 forward = -GlobalBasis.Z;
@@ -164,6 +210,41 @@ public partial class SentraCharacterController : CharacterBody3D
         UpdateMovementState(wishDirection, running);
         UpdateStreamingFocus();
         UpdateTelemetry(dt);
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventKey keyEvent
+            && keyEvent.Pressed
+            && !keyEvent.Echo
+            && keyEvent.Keycode == Key.Escape)
+        {
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+            return;
+        }
+
+        if (@event is InputEventMouseButton mouseButton
+            && mouseButton.Pressed
+            && Input.MouseMode != Input.MouseModeEnum.Captured)
+        {
+            Input.MouseMode = Input.MouseModeEnum.Captured;
+            return;
+        }
+
+        if (@event is not InputEventMouseMotion mouseMotion
+            || Input.MouseMode != Input.MouseModeEnum.Captured)
+            return;
+
+        float sensitivity = Mathf.Max(0f, MouseSensitivity) * Mathf.DegToRad(1f);
+        RotateY(-mouseMotion.Relative.X * sensitivity);
+        if (_cameraPivot == null) return;
+
+        Vector3 pitch = _cameraPivot.Rotation;
+        pitch.X = Mathf.Clamp(
+            pitch.X - mouseMotion.Relative.Y * sensitivity,
+            Mathf.DegToRad(MinimumPitchDegrees),
+            Mathf.DegToRad(MaximumPitchDegrees));
+        _cameraPivot.Rotation = pitch;
     }
 
     public void SetWorldTelemetry(
@@ -336,14 +417,16 @@ public partial class SentraCharacterController : CharacterBody3D
 
     private void UpdateStreamingFocus()
     {
-        if (!GodotObject.IsInstanceValid(_voxelBridge)) return;
+        if (_voxelBridge is not SentraVoxelBridge bridge
+            || !GodotObject.IsInstanceValid(bridge))
+            return;
         Vector2I chunk = new Vector2I(
             Mathf.FloorToInt(GlobalPosition.X / 16f),
             Mathf.FloorToInt(GlobalPosition.Z / 16f));
         if (_hasStreamChunk && chunk == _lastStreamChunk) return;
         _hasStreamChunk = true;
         _lastStreamChunk = chunk;
-        _voxelBridge.Call("request_voxel_stream", GlobalPosition, WorldSeed);
+        bridge.RequestVoxelStream(GlobalPosition, WorldSeed);
     }
 
     private void ReportGameplayEvent(CoreGameplayEventKind kind, float value)

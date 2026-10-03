@@ -62,9 +62,12 @@ names or hierarchy differ. Add `DungeonStreamingService` beside those nodes.
 Set the player's `SentraCorePath` and configure `AttackCollisionMask` to the
 project's enemy-body layer.
 
-The controller uses `ui_left`, `ui_right`, `ui_up`, and `ui_down` by default;
-add `sprint`, `dodge`, and `attack` to the Input Map or change the exported
-action names. Attach `DamageableComponent` to an enemy root on the ray mask.
+The controller uses `ui_left`, `ui_right`, `ui_up`, `ui_down`, and `jump` by
+default; add `sprint`, `dodge`, `attack`, and `fire` to the Input Map or change
+the exported action names. The player scene should have a `Node3D` named
+`CameraPivot` above its camera; mouse motion rotates the body and clamps pitch
+on the pivot without interpolation. Attach `DamageableComponent` to an enemy
+root on the ray mask.
 If a ray hits a child collider, the controller checks up to four parents for
 `IDamageable`. The controller disables its ray outside an attack and forces one
 query on attack input. A health/combat component should apply damage first,
@@ -328,7 +331,7 @@ uniform-buffer upload. Configure corruption separately on the Mantis node.
 
 `SentraCharacterController` can replace the previous movement component on a
 `CharacterBody3D`. Configure its `SentraCorePath`, input actions, attack ray
-mask and optional `VoxelBridgePath`. It uses the Godot physics tick and
+mask, camera pivot and optional `VoxelBridgePath`. It uses the Godot physics tick and
 `MoveAndSlide` for authoritative collision, accelerates horizontal velocity,
 quantizes velocity components to 1/4096 world units per second and emits a
 value-type `SentraControllerTelemetry` sample every 0.1 seconds by default.
@@ -339,10 +342,26 @@ queried every physics frame. Quantization reduces small numeric variation but
 does not make Godot physics deterministic across machines or replace a
 fixed-point authoritative simulation.
 
-When the player crosses a 16-unit chunk boundary, the controller calls the
-bridge's `request_voxel_stream(position, seed)` once. The bridge emits
-`voxel_stream_requested(Vector3, int)`; `SentraVoxelStreamer` connects to that
-signal. Remote/local orchestrator commands can use this form:
+Add `SentraOrchestratorBridge` and `SentraCraftingBridge` as project
+AutoLoads named identically to their C# classes. The orchestrator exposes the
+`crisis_tension(float)` and `points_changed(int, int)` signals, along with
+`SetCrisisTension` and `SetPoints`; connect the tension signal to cached shader
+materials or other listeners. The weapon reports successful damage hits to
+this singleton. Crafting keeps resource and crafted-item counts in fixed
+arrays, starts at Multi-Bench Tier 1, and offers `TryUpgradeBench`,
+`UnlockRecipe`, and `TryCraft`; upgrades cost Scrap/Crystal and recipes unlock
+at the tier they require. Listen to its inventory, unlock, craft, and tier
+signals instead of polling each frame.
+
+Place `SentraVoxelBridge` beside `SentraVoxelStreamer` and set the streamer's
+`BridgePath` and the bridge's `StreamerPath` to one another. When the player
+crosses a 16-unit chunk boundary, the controller calls
+`SentraVoxelBridge.RequestVoxelStream(position, seed)` once. The bridge emits
+`voxel_stream_requested(Vector3, int)`; `SentraVoxelStreamer` consumes it and
+does chunk generation on its bounded worker, then applies `MultiMeshInstance3D`
+updates on the main thread. This reuses instanced geometry rather than
+allocating one `MeshInstance3D` per voxel. Remote/local orchestrator commands
+can use this form:
 
 ```json
 {
@@ -354,7 +373,8 @@ signal. Remote/local orchestrator commands can use this form:
 }
 ```
 
-Attach `SentraVoxelStreamer` under a `Node3D`, set `BridgePath` to the bridge,
+Attach `SentraVoxelStreamer` under a `Node3D`, set `BridgePath` to
+`SentraVoxelBridge`,
 and optionally assign a pixel-toon `VoxelMaterial`. Its 16x5x16-cell room
 chunks use four fixed doorway portals, seeded internal pillars, and integer
 voxel occupancy. A single `WorkerThreadPool` task builds a bounded square
