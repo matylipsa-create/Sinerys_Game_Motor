@@ -11,6 +11,8 @@ uniform float lit_threshold : hint_range(0.0, 1.0, 0.01) = 0.72; // Umbral N.L p
 uniform float shadow_level : hint_range(0.0, 1.0, 0.01) = 0.30; // Intensidad discreta de la banda profunda.
 uniform float mid_level : hint_range(0.0, 1.0, 0.01) = 0.68; // Intensidad discreta de la banda media.
 uniform float ambient_fill : hint_range(0.0, 0.25, 0.005) = 0.035; // Relleno minimo para que las sombras no se empasten.
+uniform float crisis_tension : hint_range(0.0, 1.0, 0.01) = 0.0; // Tension global enviada por Sentra Core.
+uniform vec3 crisis_tint : source_color = vec3(0.56, 0.055, 0.075); // Color de acento en estados criticos.
 uniform float alpha_cutoff : hint_range(0.0, 1.0, 0.01) = 0.5; // Recorte opaco para texeles transparentes del atlas.
 
 varying vec2 pixel_uv; // Conserva UV interpoladas para el muestreo del albedo.
@@ -30,9 +32,10 @@ void fragment() { // Etapa de fragmentos.
 
 void light() { // Evaluacion de luz por luz, incluyendo su atenuacion y sombra.
 	float diffuse = max(dot(NORMAL, LIGHT), 0.0); // Producto N.L recortado; Godot normaliza los vectores del shader.
-	float mid_band = step(mid_threshold, diffuse); // Cambia de sombra profunda a media en un unico escalon.
-	float lit_band = step(lit_threshold, diffuse); // Cambia de banda media a luz plena en un unico escalon.
-	vec3 band_tint = mix(shadow_tint, mid_tint, mid_band); // Elige el tinte entre las dos bandas de sombra.
+	float mid_band = step(mid_threshold, diffuse); // Cruza el umbral configurado por el orquestador.
+	float lit_band = step(lit_threshold, diffuse); // Cruza el umbral configurado para luz plena.
+	vec3 stressed_mid_tint = mix(mid_tint, crisis_tint, crisis_tension * 0.28); // Tiñe levemente las sombras bajo crisis.
+	vec3 band_tint = mix(shadow_tint, stressed_mid_tint, mid_band); // Elige el tinte entre las bandas de sombra.
 	band_tint = mix(band_tint, light_tint, lit_band); // Sustituye el tinte por el de luz en la banda superior.
 	float band_level = mix(shadow_level, mid_level, mid_band); // Selecciona la intensidad de sombra profunda o media.
 	band_level = mix(band_level, 1.0, lit_band); // La banda superior usa la intensidad completa.

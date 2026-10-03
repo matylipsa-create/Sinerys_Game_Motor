@@ -265,6 +265,66 @@ entire Godot project stays within a 32 MiB VRAM budget or a frame-time target.
 Measure the Compatibility renderer on the actual GPU, especially with the
 outline pass and shadowed lights enabled.
 
+## Shader orchestration, character telemetry and voxel streaming
+
+Add `SentraShaderOrchestrator` to the gameplay root. Set `SentraCorePath`,
+`MantisPostProcessPath`, the shared toon `ShaderMaterial` resources in
+`ToonMaterials`, `OutlineShader` to `pixel_toon_outline.gdshader`, and the
+foreground mesh instances in `OutlineTargets`. The manager listens to typed
+`CrisisSnapshot` updates, filters changes below 0.005 tension, then updates
+the toon band/tension uniforms and calls `MantisVisionPostProcess.set_tension`.
+Outline hull instances share source meshes and are created once at startup;
+they do not duplicate texture or mesh storage. They inherit their target's
+transform and are excluded from shadow casting.
+
+Godot shader parameters are individual uniforms, not an application-visible
+bulk memory block. The manager caches the last tension and only writes
+individual `ShaderMaterial` parameters when the crisis meaningfully changes;
+this avoids per-frame managed allocations but is not literally one GPU
+uniform-buffer upload. Configure corruption separately on the Mantis node.
+
+`SentraCharacterController` can replace the previous movement component on a
+`CharacterBody3D`. Configure its `SentraCorePath`, input actions, attack ray
+mask and optional `VoxelBridgePath`. It uses the Godot physics tick and
+`MoveAndSlide` for authoritative collision, accelerates horizontal velocity,
+quantizes velocity components to 1/4096 world units per second and emits a
+value-type `SentraControllerTelemetry` sample every 0.1 seconds by default.
+The typed C# event and `SentraCoreEngine.ReportControllerTelemetry` do not
+construct per-sample collections or JSON. Attacks query one cached
+`RayCast3D` only on the attack input edge and call `IDamageable`; they are not
+queried every physics frame. Quantization reduces small numeric variation but
+does not make Godot physics deterministic across machines or replace a
+fixed-point authoritative simulation.
+
+When the player crosses a 16-unit chunk boundary, the controller calls the
+bridge's `request_voxel_stream(position, seed)` once. The bridge emits
+`voxel_stream_requested(Vector3, int)`; `SentraVoxelStreamer` connects to that
+signal. Remote/local orchestrator commands can use this form:
+
+```json
+{
+  "type": "STREAM_VOXELS",
+  "payload": {
+    "center": { "x": 20.0, "y": 0.0, "z": -8.0 },
+    "seed": 12345
+  }
+}
+```
+
+Attach `SentraVoxelStreamer` under a `Node3D`, set `BridgePath` to the bridge,
+and optionally assign a pixel-toon `VoxelMaterial`. Its 16x5x16-cell room
+chunks use four fixed doorway portals, seeded internal pillars, and integer
+voxel occupancy. A single `WorkerThreadPool` task builds a bounded square
+neighborhood using preallocated byte buffers and checks portal corridors with
+`SentraFastMath.RaycastVoxels`; the worker never creates Godot nodes/resources
+or touches the scene tree. New focus requests overwrite the pending request
+and invalidate stale output. The main thread creates/reuses `MultiMesh`
+instances and writes a bounded number of cell slots per frame, keeping each
+chunk hidden until complete. `chunk_applied` reports portal bits N/E/S/W as
+1/2/4/8. Radius is capped at 2 (at most 25 chunks); tune the cell budget and
+profile the actual Compatibility GPU before increasing draw or instance
+counts.
+
 ## Deterministic dungeon contract
 
 `DungeonGenerationRequest` contains seed, room count, corruption, current

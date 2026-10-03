@@ -35,6 +35,36 @@ public enum PlayerBehaviorPattern : byte
     Fleeing
 }
 
+public enum SentraMovementState : byte
+{
+    Idle,
+    Walking,
+    Running,
+    Dodging,
+    Combat,
+    Airborne
+}
+
+public readonly struct SentraControllerTelemetry
+{
+    public readonly Vector3 Position;
+    public readonly Vector3 Velocity;
+    public readonly SentraMovementState State;
+    public readonly uint PhysicsTick;
+
+    public SentraControllerTelemetry(
+        Vector3 position,
+        Vector3 velocity,
+        SentraMovementState state,
+        uint physicsTick)
+    {
+        Position = position;
+        Velocity = velocity;
+        State = state;
+        PhysicsTick = physicsTick;
+    }
+}
+
 [Flags]
 public enum PerceptionSenseFlags : byte
 {

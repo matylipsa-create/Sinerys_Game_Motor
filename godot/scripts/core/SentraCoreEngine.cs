@@ -35,8 +35,10 @@ public partial class SentraCoreEngine : Node
 
     internal event Action<CoreGameplayEvent> GameplayEventPublished;
     internal event Action<CrisisSnapshot> CrisisSnapshotPublished;
+    public event Action<SentraControllerTelemetry> ControllerTelemetryPublished;
 
     internal CrisisSnapshot LatestCrisis => _latestCrisis;
+    public SentraControllerTelemetry LatestControllerTelemetry { get; private set; }
     public int PendingGameplayEventCount => _eventCount;
     public int DroppedGameplayEventCount { get; private set; }
 
@@ -106,6 +108,12 @@ public partial class SentraCoreEngine : Node
             telemetry.Corruption,
             telemetry.EnvironmentalPressure,
             nearbyEnemies));
+    }
+
+    public void ReportControllerTelemetry(SentraControllerTelemetry telemetry)
+    {
+        LatestControllerTelemetry = telemetry;
+        ControllerTelemetryPublished?.Invoke(telemetry);
     }
 
     private void OnBehaviorProfileChanged(PlayerBehaviorProfile profile)

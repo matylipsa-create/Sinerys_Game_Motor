@@ -6,7 +6,8 @@ export type OrchestratorCommandType =
   | 'WORLD_STATE'
   | 'WORLD_STATE_ACK'
   | 'TELEMETRY_PING'
-  | 'TELEMETRY_PONG';
+  | 'TELEMETRY_PONG'
+  | 'STREAM_VOXELS';
 
 export interface OrchestratorCommand {
   type: OrchestratorCommandType;
@@ -24,6 +25,7 @@ const COMMAND_TYPES: OrchestratorCommandType[] = [
   'WORLD_STATE_ACK',
   'TELEMETRY_PING',
   'TELEMETRY_PONG',
+  'STREAM_VOXELS',
 ];
 
 function isOrchestratorCommand(value: unknown): value is OrchestratorCommand {

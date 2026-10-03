@@ -82,6 +82,11 @@ func set_critical_state(next_tension: float, next_corruption: float) -> void:
 	_sync_material()
 
 
+func set_tension(next_tension: float) -> void:
+	tension = clampf(next_tension, 0.0, 1.0)
+	_sync_material()
+
+
 func _on_crisis_snapshot_updated(
 	next_tension: float,
 	_phase: int,
@@ -111,6 +116,7 @@ func _sync_material() -> void:
 		return
 	_material.set_shader_parameter("tension", tension)
 	_material.set_shader_parameter("corruption", corruption)
+	_material.set_shader_parameter("contrast", 1.18 + tension * 0.22)
 	_material.set_shader_parameter("edge_strength", edge_strength)
 	_material.set_shader_parameter("depth_edge_strength", depth_edge_strength)
 	_material.set_shader_parameter("impact_radius", impact_radius)

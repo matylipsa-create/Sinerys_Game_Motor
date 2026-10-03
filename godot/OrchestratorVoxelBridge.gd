@@ -26,6 +26,7 @@ signal world_difficulty_changed(band: String, scale: float)
 signal world_state_event_received(event_type: String, payload: Dictionary)
 signal perception_directive_received(payload: Dictionary)
 signal survival_directive_received(payload: Dictionary)
+signal voxel_stream_requested(center: Vector3, seed: int)
 
 var worker_task_id: int = -1
 var base_transforms: Array[Transform3D] = []
@@ -261,6 +262,8 @@ func _dispatch_command(command: Dictionary) -> void:
 			_handle_world_state(payload)
 		"TELEMETRY_PONG":
 			_handle_telemetry_pong(payload)
+		"STREAM_VOXELS":
+			_handle_voxel_stream_request(payload)
 		_:
 			pass
 
@@ -335,6 +338,36 @@ func _apply_survival_directive(survival: Dictionary) -> void:
 	if _is_finite_number(radiation):
 		suit_radiation = clampf(float(radiation), 0.0, 100.0)
 	survival_directive_received.emit(survival)
+
+
+func request_voxel_stream(center: Vector3, seed: int) -> void:
+	if not is_finite(center.x) or not is_finite(center.y) or not is_finite(center.z):
+		push_warning("GODOT BRIDGE: Ignored voxel stream request with non-finite position.")
+		return
+	voxel_stream_requested.emit(center, seed)
+
+
+func _handle_voxel_stream_request(payload: Dictionary) -> void:
+	var center_value: Variant = payload.get("center", {})
+	var seed_value: Variant = payload.get("seed", 0)
+	if typeof(center_value) != TYPE_DICTIONARY or typeof(seed_value) != TYPE_INT:
+		push_warning("GODOT BRIDGE: Ignored malformed STREAM_VOXELS command.")
+		return
+
+	var center_data: Dictionary = center_value
+	if not center_data.has("x") or not center_data.has("y") or not center_data.has("z"):
+		push_warning("GODOT BRIDGE: STREAM_VOXELS center must contain x, y, and z.")
+		return
+	var x: Variant = center_data.get("x", 0.0)
+	var y: Variant = center_data.get("y", 0.0)
+	var z: Variant = center_data.get("z", 0.0)
+	if not _is_finite_number(x) or not _is_finite_number(y) or not _is_finite_number(z):
+		push_warning("GODOT BRIDGE: Ignored STREAM_VOXELS command with invalid center.")
+		return
+	request_voxel_stream(
+		Vector3(float(x), float(y), float(z)),
+		int(seed_value)
+	)
 
 
 func send_command(command: Dictionary) -> void:
