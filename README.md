@@ -23,6 +23,10 @@ El core conecta percepcion, decisiones y cambios persistentes del mundo. La base
 
 El proyecto es un prototipo de software: **todavia no incluye un runtime 3D completo, simulacion fisica, guardado durable multiplataforma ni networking multijugador**. La carpeta `godot/` contiene un controlador experimental; no forma parte del build web de Vite.
 
+### Objetivo experimental de Godot
+
+La carpeta `godot/` contiene prototipos para un futuro runtime Godot 4.x: puente acotado con Sentra Core, utilidades voxel, streaming asincrono, controlador, materiales pixel-toon y postproceso Mantis. El renderer Compatibility y un presupuesto de 32 MiB de VRAM son objetivos de diseño, no resultados certificados. Este repositorio no incluye todavia el proyecto anfitrion (`project.godot`, escenas ni `.csproj`), por lo que no se pueden confirmar aqui la compilacion Godot, la compatibilidad final de shaders ni los FPS/VRAM en hardware real. Consulta [la guia tecnica de los sistemas Godot](./docs/GODOT_GAMEPLAY_SYSTEMS.md) para el cableado y los limites conocidos.
+
 ## Desarrollo local
 
 Requiere Node.js y npm.

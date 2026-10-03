@@ -1,5 +1,23 @@
 # Godot gameplay and perception systems
 
+## Target profile and verified limits
+
+The Godot scripts in this repository are experimental integration components
+for a future Godot 4.x game runtime, targeting the Compatibility renderer and
+low-memory hardware. The 32 MiB VRAM budget, 60 FPS and sub-millisecond hot
+path costs are design goals, not benchmark results or guarantees. This
+repository has no `project.godot`, scenes, C# project file or Godot executable;
+shader compilation, C# binding compatibility, scene setup, memory use and
+render/physics performance must be validated in the host project on its actual
+target hardware.
+
+The PWA build and its TypeScript validation are independent of Godot and do
+not compile or exercise these scripts. Several adapters and Godot signals
+allocate, and `CharacterBody3D`/`MoveAndSlide` remain floating-point engine
+physics; avoid describing the entire runtime as zero-allocation or
+cross-machine deterministic. Use profiling captures to decide where the
+approximation utilities outperform native Godot operations.
+
 ## Ownership and flow
 
 `SentraCoreEngine` owns the bounded gameplay-event ring and latest crisis
