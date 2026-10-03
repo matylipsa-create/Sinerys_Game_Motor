@@ -166,7 +166,7 @@ public static class DungeonGraphGenerator
         var rooms = new DungeonRoomData[roomCount];
         var connections = new DungeonConnectionData[roomCount + roomCount / 4];
         int connectionCount = 0;
-        var spawns = new DungeonSpawnData[MaximumRooms * 5];
+        var spawns = new DungeonSpawnData[MaximumRooms * 6];
         int spawnCount = 0;
 
         for (int index = 0; index < roomCount; index++)

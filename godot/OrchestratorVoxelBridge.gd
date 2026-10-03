@@ -10,6 +10,7 @@ const MAX_COMMANDS_PER_FRAME := 12
 const MAX_OUTGOING_MESSAGES := 64
 const MAX_OUTGOING_PER_FRAME := 16
 const TRANSFORMS_PER_FRAME := 128
+const BRIDGE_PING_INTERVAL := 2.0
 const CAMERA_MODES := ["ISOMETRIC", "FIRST_PERSON", "SIDE_SCROLLER"]
 const WORLD_STATE_TYPES := [
 	"world:tension:changed",
@@ -52,6 +53,11 @@ var _pending_transform_index: int = 0
 var _dropped_packets: int = 0
 var _dropped_commands: int = 0
 var _dropped_outgoing: int = 0
+var _ping_elapsed: float = 0.0
+var _ping_sequence: int = 0
+var _pending_ping_sequence: int = -1
+var _ping_sent_usec: int = 0
+var _bridge_latency_ms: float = -1.0
 var _shutting_down: bool = false
 
 
@@ -71,6 +77,7 @@ func _process(_delta: float) -> void:
 	_process_commands()
 	_send_queued_commands()
 	_apply_transform_batch()
+	_update_bridge_probe(_delta)
 
 
 func _exit_tree() -> void:
@@ -252,6 +259,8 @@ func _dispatch_command(command: Dictionary) -> void:
 			pass
 		"WORLD_STATE":
 			_handle_world_state(payload)
+		"TELEMETRY_PONG":
+			_handle_telemetry_pong(payload)
 		_:
 			pass
 
@@ -346,6 +355,36 @@ func get_queue_stats() -> Dictionary:
 		"dropped_outgoing": _dropped_outgoing,
 		"generation": _generation,
 	}
+
+
+func get_bridge_latency_ms() -> float:
+	return _bridge_latency_ms
+
+
+func _update_bridge_probe(delta: float) -> void:
+	if socket_peer == null \
+			or socket_peer.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		_pending_ping_sequence = -1
+		return
+	_ping_elapsed += delta
+	if _ping_elapsed < BRIDGE_PING_INTERVAL:
+		return
+	_ping_elapsed = 0.0
+	_ping_sequence += 1
+	_pending_ping_sequence = _ping_sequence
+	_ping_sent_usec = Time.get_ticks_usec()
+	send_command({
+		"type": "TELEMETRY_PING",
+		"payload": { "sequence": _ping_sequence },
+	})
+
+
+func _handle_telemetry_pong(payload: Dictionary) -> void:
+	var sequence: Variant = payload.get("sequence")
+	if typeof(sequence) != TYPE_INT or int(sequence) != _pending_ping_sequence:
+		return
+	_bridge_latency_ms = float(Time.get_ticks_usec() - _ping_sent_usec) / 1000.0
+	_pending_ping_sequence = -1
 
 
 func _send_queued_commands() -> void:

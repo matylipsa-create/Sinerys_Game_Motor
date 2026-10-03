@@ -4,7 +4,9 @@ export type OrchestratorCommandType =
   | 'SPAWN_MOBS'
   | 'TRIGGER_CRISIS'
   | 'WORLD_STATE'
-  | 'WORLD_STATE_ACK';
+  | 'WORLD_STATE_ACK'
+  | 'TELEMETRY_PING'
+  | 'TELEMETRY_PONG';
 
 export interface OrchestratorCommand {
   type: OrchestratorCommandType;
@@ -20,6 +22,8 @@ const COMMAND_TYPES: OrchestratorCommandType[] = [
   'TRIGGER_CRISIS',
   'WORLD_STATE',
   'WORLD_STATE_ACK',
+  'TELEMETRY_PING',
+  'TELEMETRY_PONG',
 ];
 
 function isOrchestratorCommand(value: unknown): value is OrchestratorCommand {
@@ -93,6 +97,15 @@ export class OrchestratorBridge {
       if (!isOrchestratorCommand(data)) {
         console.warn('SENTRA BRIDGE: Comando entrante no válido.');
         return;
+      }
+      if (data.type === 'TELEMETRY_PING') {
+        const sequence = data.payload.sequence;
+        if (typeof sequence === 'number' && Number.isSafeInteger(sequence)) {
+          this.sendCommand({
+            type: 'TELEMETRY_PONG',
+            payload: { sequence },
+          });
+        }
       }
       this.listeners.forEach((listener) => listener(data));
     } catch (error) {

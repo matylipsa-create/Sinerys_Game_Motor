@@ -14,6 +14,8 @@ public partial class SentraCoreEngine : Node
     private int _eventCount;
     private double _simulationTime;
     private CrisisThreatDirector _crisisDirector;
+    private PlayerBehaviorAnalyzer _behaviorAnalyzer;
+    private PerceptionFieldProcessor _perceptionProcessor;
     private CrisisSnapshot _latestCrisis;
 
     [Export(PropertyHint.Range, "1,240,1")]
@@ -21,6 +23,12 @@ public partial class SentraCoreEngine : Node
 
     [Export]
     public NodePath CrisisDirectorPath { get; set; } = new NodePath("CrisisThreatDirector");
+
+    [Export]
+    public NodePath BehaviorAnalyzerPath { get; set; } = new NodePath("PlayerBehaviorAnalyzer");
+
+    [Export]
+    public NodePath PerceptionProcessorPath { get; set; } = new NodePath("PerceptionFieldProcessor");
 
     [Export(PropertyHint.Range, "1,100,1")]
     public float ThreatRadius { get; set; } = 18f;
@@ -32,6 +40,11 @@ public partial class SentraCoreEngine : Node
     public int PendingGameplayEventCount => _eventCount;
     public int DroppedGameplayEventCount { get; private set; }
 
+    public long GetManagedHeapBytes()
+    {
+        return GC.GetTotalMemory(false);
+    }
+
     public override void _Ready()
     {
         TickRate = Mathf.Clamp(TickRate, 1, 240);
@@ -41,6 +54,14 @@ public partial class SentraCoreEngine : Node
             _crisisDirector = GetNodeOrNull<CrisisThreatDirector>(CrisisDirectorPath);
             _crisisDirector?.BindEngine(this);
         }
+        if (!BehaviorAnalyzerPath.IsEmpty)
+        {
+            _behaviorAnalyzer = GetNodeOrNull<PlayerBehaviorAnalyzer>(BehaviorAnalyzerPath);
+            if (_behaviorAnalyzer != null)
+                _behaviorAnalyzer.ProfileChanged += OnBehaviorProfileChanged;
+        }
+        if (!PerceptionProcessorPath.IsEmpty)
+            _perceptionProcessor = GetNodeOrNull<PerceptionFieldProcessor>(PerceptionProcessorPath);
         GD.Print("[Sentra Core C#] Initialized agnostic engine runtime for Godot.");
     }
 
@@ -55,8 +76,25 @@ public partial class SentraCoreEngine : Node
         _crisisDirector = director;
     }
 
+    internal int SubmitPerceptionSnapshot(
+        PerceptionEntitySample[] entities,
+        int entityCount,
+        PerceptionObserver[] observers,
+        int observerCount)
+    {
+        if (_perceptionProcessor == null)
+            throw new InvalidOperationException(
+                "PerceptionFieldProcessor was not found at PerceptionProcessorPath.");
+        return _perceptionProcessor.SubmitSnapshot(
+            entities,
+            entityCount,
+            observers,
+            observerCount);
+    }
+
     internal void ReportPlayerTelemetry(PlayerTelemetry telemetry)
     {
+        _behaviorAnalyzer?.SubmitTelemetry(telemetry);
         int nearbyEntities = CountNearbyThreats(telemetry.Position, ThreatRadius);
         int nearbyEnemies = Mathf.Max(telemetry.NearbyEnemies, nearbyEntities);
         _crisisDirector?.SubmitPlayerTelemetry(new PlayerTelemetry(
@@ -68,6 +106,11 @@ public partial class SentraCoreEngine : Node
             telemetry.Corruption,
             telemetry.EnvironmentalPressure,
             nearbyEnemies));
+    }
+
+    private void OnBehaviorProfileChanged(PlayerBehaviorProfile profile)
+    {
+        _crisisDirector?.SubmitBehaviorProfile(profile);
     }
 
     private int CountNearbyThreats(Vector3 position, float radius)
@@ -99,11 +142,12 @@ public partial class SentraCoreEngine : Node
             _simulationTime);
 
         _crisisDirector?.RecordGameplayEvent(gameplayEvent);
+        _behaviorAnalyzer?.RecordGameplayEvent(gameplayEvent);
         if (_eventCount == GameplayEventCapacity)
         {
             DroppedGameplayEventCount++;
-            GameplayEventPublished?.Invoke(gameplayEvent);
-            return;
+            _eventReadIndex = (_eventReadIndex + 1) % GameplayEventCapacity;
+            _eventCount--;
         }
 
         _gameplayEvents[_eventWriteIndex] = gameplayEvent;
@@ -130,6 +174,12 @@ public partial class SentraCoreEngine : Node
     {
         _latestCrisis = snapshot;
         CrisisSnapshotPublished?.Invoke(snapshot);
+    }
+
+    public override void _ExitTree()
+    {
+        if (_behaviorAnalyzer != null)
+            _behaviorAnalyzer.ProfileChanged -= OnBehaviorProfileChanged;
     }
 
     public void RegisterEntity(GameEntityData entity)

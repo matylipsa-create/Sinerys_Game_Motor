@@ -175,6 +175,29 @@ public partial class FirstPersonController : CharacterBody3D
         _insideHighTensionZone = inside;
     }
 
+    internal PerceptionEntitySample CreatePerceptionSample(uint factionMask)
+    {
+        float horizontalSpeed = new Vector2(Velocity.X, Velocity.Z).Length();
+        float movementNoise = Mathf.Clamp(horizontalSpeed / Mathf.Max(1f, RunSpeed), 0f, 1f);
+        float actionNoise = Mathf.Clamp(_actionsPerSecond / 5f, 0f, 1f) * 0.35f;
+        float coreTension = _sentraCore != null
+            ? _sentraCore.LatestCrisis.Tension
+            : 0f;
+        float tensionTrail = Mathf.Clamp(
+            Mathf.Max(coreTension, Mathf.Max(_environmentalPressure, _corruption)),
+            0f,
+            1f);
+        return new PerceptionEntitySample(
+            unchecked((long)GetInstanceId()),
+            GlobalPosition,
+            -GlobalBasis.Z,
+            Mathf.Clamp(movementNoise + actionNoise, 0f, 1f),
+            tensionTrail,
+            factionMask,
+            true,
+            true);
+    }
+
     public void ApplyPlayerDamage(
         float damage,
         float resultingHealthRatio,

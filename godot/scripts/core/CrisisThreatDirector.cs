@@ -35,6 +35,7 @@ public partial class CrisisThreatDirector : Node
     private double _updateAccumulator;
     private double _snapshotAccumulator;
     private float _eventPressure;
+    private float _behaviorPressure;
     private float _smoothedTension;
     private uint _sequence;
     private ThreatPhase _phase = ThreatPhase.Calm;
@@ -97,9 +98,22 @@ public partial class CrisisThreatDirector : Node
         _eventPressure = Mathf.Clamp(_eventPressure + pressure, 0f, 0.35f);
     }
 
+    internal void SubmitBehaviorProfile(PlayerBehaviorProfile profile)
+    {
+        float patternPressure = profile.Pattern switch
+        {
+            PlayerBehaviorPattern.Aggressive => 0.1f * profile.Confidence,
+            PlayerBehaviorPattern.Fleeing => 0.16f * profile.Confidence,
+            PlayerBehaviorPattern.Passive => -0.06f * profile.Confidence,
+            _ => 0f
+        };
+        _behaviorPressure = Mathf.Clamp(patternPressure, -0.08f, 0.18f);
+    }
+
     private void UpdateTension(float elapsed)
     {
         _eventPressure *= Mathf.Exp(-1.65f * elapsed);
+        _behaviorPressure = Mathf.MoveToward(_behaviorPressure, 0f, 0.05f * elapsed);
 
         float healthStress = 1f - Mathf.Clamp(_playerTelemetry.HealthRatio, 0f, 1f);
         float enemyStress = Mathf.Clamp(_playerTelemetry.NearbyEnemies / 8f, 0f, 1f);
@@ -123,6 +137,7 @@ public partial class CrisisThreatDirector : Node
             + paceStress * 0.12f
             + corruption * 0.15f
             + environment * 0.15f
+            + _behaviorPressure
             + _eventPressure;
 
         float normalized = Mathf.Clamp(linearStress, 0f, 1f);
