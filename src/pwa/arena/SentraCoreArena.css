@@ -137,3 +137,7 @@
   .arena-mechanic p { min-height: 0; }
   .arena-footer { flex-direction: column; font-size: 7px; }
 }
+
+.arena-page { font-size: 16px; }
+.arena-page button,
+.arena-page .arena-header nav button { min-height: 44px; }

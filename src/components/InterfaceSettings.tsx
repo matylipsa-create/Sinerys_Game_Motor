@@ -80,11 +80,11 @@ export function InterfaceSettings() {
         id="sentra-theme-select"
         value={theme}
         onChange={(event) => setTheme(event.target.value as SentraTheme)}
-        className="min-h-9 min-w-0 max-w-40 border border-[var(--sentra-accent)]/25 bg-transparent px-2 text-[10px] text-[var(--sentra-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--sentra-accent)]"
+        className="min-h-11 min-w-0 max-w-40 border border-[var(--sentra-accent)]/25 bg-transparent px-2 text-[10px] text-[var(--sentra-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--sentra-accent)]"
       >
         {THEMES.map((option) => <option key={option.id} value={option.id} className="bg-[#05090a] text-white">{option.label}</option>)}
       </select>
-      <label className="flex min-h-9 shrink-0 items-center gap-1.5 px-1 text-[var(--sentra-text)]">
+      <label className="flex min-h-11 shrink-0 items-center gap-1.5 px-1 text-[var(--sentra-text)]">
         <input
           type="checkbox"
           checked={audioEnabled}
@@ -93,7 +93,7 @@ export function InterfaceSettings() {
         />
         Señales
       </label>
-      <button type="button" onClick={() => setShowApiAccess((open) => !open)} aria-expanded={showApiAccess} aria-controls="sentra-api-access" className="min-h-9 border border-[var(--sentra-accent)]/25 px-2 text-[10px] text-[var(--sentra-text)] hover:bg-white/5">
+      <button type="button" onClick={() => setShowApiAccess((open) => !open)} aria-expanded={showApiAccess} aria-controls="sentra-api-access" className="min-h-11 border border-[var(--sentra-accent)]/25 px-2 text-[10px] text-[var(--sentra-text)] hover:bg-white/5">
         BUS {hasApiToken ? '●' : '○'}
       </button>
       {showApiAccess && (

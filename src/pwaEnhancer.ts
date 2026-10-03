@@ -75,7 +75,7 @@ function setupNetworkMonitor(): void {
   const updateStatus = (): void => {
     const online = navigator.onLine;
     badge.classList.toggle('offline', !online);
-    if (text) text.textContent = online ? 'SENTRA: SECURE NODE' : 'SENTRA: OFFLINE MESH';
+    if (text) text.textContent = online ? 'Con conexión' : 'Sin conexión';
   };
 
   window.addEventListener('online', updateStatus);

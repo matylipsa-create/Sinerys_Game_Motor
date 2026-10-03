@@ -263,3 +263,6 @@
     50% { filter: brightness(1.12) saturate(1.14); }
   }
 }
+
+.conquer-home { font-size: 16px; }
+.conquer-home button { min-height: 44px; }

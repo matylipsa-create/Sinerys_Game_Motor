@@ -17,7 +17,7 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
           <div className="conquer-nav-status"><span /> SENTRA CORE / ONLINE</div>
           <nav className="conquer-nav" aria-label="Navegación principal">
             <button type="button" className="conquer-nav-link" onClick={() => onNavigate('/core')}>EL MOTOR</button>
-            <button type="button" className="conquer-nav-cta" onClick={() => onNavigate('/arena')}>ENTRAR A LA ARENA <span aria-hidden="true">↗</span></button>
+            <button type="button" className="conquer-nav-cta" onClick={() => onNavigate('/core')}>ABRIR ORQUESTADOR <span aria-hidden="true">↗</span></button>
           </nav>
         </header>
 
@@ -29,7 +29,7 @@ export function ConquerHome({ onNavigate }: ConquerHomeProps) {
             <p className="conquer-description">Dirige una colonia al borde del colapso. Sentra Core Orchestrator convierte cada decisión en una nueva condición del mundo.</p>
             <div className="conquer-actions">
               <button type="button" className="conquer-play" onClick={() => onNavigate('/arena')}>
-                <span className="conquer-play-icon" aria-hidden="true">▶</span> INICIAR ARENA
+                <span className="conquer-play-icon" aria-hidden="true">▶</span> CONTINUAR AL ORQUESTADOR
               </button>
               <button type="button" className="conquer-engine-link" onClick={() => onNavigate('/core')}>
                 EXPLORAR SENTRA CORE <span aria-hidden="true">→</span>

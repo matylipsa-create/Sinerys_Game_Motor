@@ -4,10 +4,12 @@ import {
   type ArenaMechanic,
   type ArenaState,
 } from './SentraCoreArena';
+import type { OrchestratorBridge } from '../../core/game/OrchestratorBridge';
 import './SentraCoreArena.css';
 
 interface SentraCoreArenaViewProps {
   onNavigate: (route: string) => void;
+  bridge: OrchestratorBridge;
 }
 
 const MECHANICS: { id: ArenaMechanic; title: string; key: string; action: string }[] = [
@@ -65,26 +67,36 @@ function ArenaScene({ state }: { state: ArenaState }) {
   );
 }
 
-export function SentraCoreArenaView({ onNavigate }: SentraCoreArenaViewProps) {
-  const [state, setState] = useState(() => SentraCoreArenaManager.initializeBattleRoom());
+export function SentraCoreArenaView({ onNavigate, bridge }: SentraCoreArenaViewProps) {
+  const [state, setState] = useState(() => {
+    const arenaState = bridge.getArenaState();
+    if (!arenaState) throw new Error('The arena state was not initialized by the game session.');
+    return arenaState;
+  });
   const [announcement, setAnnouncement] = useState('Sala enlazada. Elige una mecánica para iniciar el tutorial táctico.');
 
   const performMechanic = (mechanic: ArenaMechanic) => {
     const result = SentraCoreArenaManager.performMechanic(state, mechanic);
-    setState(result.state);
+    setState(bridge.setArenaState(result.state, `arena.mechanic.${mechanic}`));
     setAnnouncement(result.message);
   };
 
   const defeatMiniBoss = () => {
     const result = SentraCoreArenaManager.defeatMiniBoss(state);
-    setState(result.state);
+    setState(bridge.setArenaState(result.state, 'arena.miniboss.defeat'));
     setAnnouncement(result.message);
   };
 
   const resetArena = () => {
-    setState(SentraCoreArenaManager.initializeBattleRoom());
+    setState(bridge.setArenaState(SentraCoreArenaManager.initializeBattleRoom(), 'arena.reset'));
     setAnnouncement('Protocolo reiniciado. La cámara vuelve a estado inicial.');
   };
+
+  useEffect(() => bridge.subscribeRenderer((message) => {
+    if (message.kind !== 'state') return;
+    const arenaState = bridge.getArenaState();
+    if (arenaState) setState(arenaState);
+  }), [bridge]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -96,13 +108,13 @@ export function SentraCoreArenaView({ onNavigate }: SentraCoreArenaViewProps) {
 
       event.preventDefault();
       const result = SentraCoreArenaManager.performMechanic(state, mechanic);
-      setState(result.state);
+      setState(bridge.setArenaState(result.state, `arena.mechanic.${mechanic}`));
       setAnnouncement(result.message);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state]);
+  }, [bridge, state]);
 
   return (
     <main className="arena-page">
@@ -166,7 +178,7 @@ export function SentraCoreArenaView({ onNavigate }: SentraCoreArenaViewProps) {
           </aside>
         </div>
 
-        <footer className="arena-footer"><span>SENTRA CORE ORCHESTRATOR <i>·</i> EVENTO LOCAL</span><span>DATOS DE PRÁCTICA <b>NO PERSISTENTES</b></span></footer>
+        <footer className="arena-footer"><span>SENTRA CORE ORCHESTRATOR <i>·</i> EVENTO LOCAL</span><span>CHECKPOINT ACTIVO <b>INDEXEDDB</b></span></footer>
       </div>
     </main>
   );
