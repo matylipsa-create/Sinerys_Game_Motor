@@ -4,16 +4,132 @@ using System.Collections.Generic;
 
 public partial class SentraCoreEngine : Node
 {
+    private const int GameplayEventCapacity = 512;
     private readonly Dictionary<string, GameEntityData> _entities =
         new Dictionary<string, GameEntityData>(StringComparer.Ordinal);
+    private readonly CoreGameplayEvent[] _gameplayEvents =
+        new CoreGameplayEvent[GameplayEventCapacity];
+    private int _eventReadIndex;
+    private int _eventWriteIndex;
+    private int _eventCount;
+    private double _simulationTime;
+    private CrisisThreatDirector _crisisDirector;
+    private CrisisSnapshot _latestCrisis;
 
     [Export(PropertyHint.Range, "1,240,1")]
     public int TickRate { get; set; } = 60;
 
+    [Export]
+    public NodePath CrisisDirectorPath { get; set; } = new NodePath("CrisisThreatDirector");
+
+    [Export(PropertyHint.Range, "1,100,1")]
+    public float ThreatRadius { get; set; } = 18f;
+
+    internal event Action<CoreGameplayEvent> GameplayEventPublished;
+    internal event Action<CrisisSnapshot> CrisisSnapshotPublished;
+
+    internal CrisisSnapshot LatestCrisis => _latestCrisis;
+    public int PendingGameplayEventCount => _eventCount;
+    public int DroppedGameplayEventCount { get; private set; }
+
     public override void _Ready()
     {
         TickRate = Mathf.Clamp(TickRate, 1, 240);
+        ThreatRadius = Mathf.Max(1f, ThreatRadius);
+        if (!CrisisDirectorPath.IsEmpty)
+        {
+            _crisisDirector = GetNodeOrNull<CrisisThreatDirector>(CrisisDirectorPath);
+            _crisisDirector?.BindEngine(this);
+        }
         GD.Print("[Sentra Core C#] Initialized agnostic engine runtime for Godot.");
+    }
+
+    public override void _Process(double delta)
+    {
+        if (double.IsNaN(delta) || double.IsInfinity(delta) || delta <= 0d) return;
+        _simulationTime += delta;
+    }
+
+    internal void BindCrisisDirector(CrisisThreatDirector director)
+    {
+        _crisisDirector = director;
+    }
+
+    internal void ReportPlayerTelemetry(PlayerTelemetry telemetry)
+    {
+        int nearbyEntities = CountNearbyThreats(telemetry.Position, ThreatRadius);
+        int nearbyEnemies = Mathf.Max(telemetry.NearbyEnemies, nearbyEntities);
+        _crisisDirector?.SubmitPlayerTelemetry(new PlayerTelemetry(
+            telemetry.Position,
+            telemetry.HealthRatio,
+            telemetry.SpeedRatio,
+            telemetry.ActionsPerSecond,
+            telemetry.IncomingDamagePerSecond,
+            telemetry.Corruption,
+            telemetry.EnvironmentalPressure,
+            nearbyEnemies));
+    }
+
+    private int CountNearbyThreats(Vector3 position, float radius)
+    {
+        float radiusSquared = radius * radius;
+        int count = 0;
+        foreach (GameEntityData entity in _entities.Values)
+        {
+            if (entity.Type != GameEntityType.Chimera) continue;
+            float dx = entity.X - position.X;
+            float dz = entity.Y - position.Z;
+            if (dx * dx + dz * dz <= radiusSquared) count++;
+        }
+        return count;
+    }
+
+    internal void ReportGameplayEvent(
+        CoreGameplayEventKind kind,
+        long entityId,
+        Vector3 position,
+        float value)
+    {
+        if (float.IsNaN(value) || float.IsInfinity(value)) return;
+        var gameplayEvent = new CoreGameplayEvent(
+            kind,
+            entityId,
+            position,
+            value,
+            _simulationTime);
+
+        _crisisDirector?.RecordGameplayEvent(gameplayEvent);
+        if (_eventCount == GameplayEventCapacity)
+        {
+            DroppedGameplayEventCount++;
+            GameplayEventPublished?.Invoke(gameplayEvent);
+            return;
+        }
+
+        _gameplayEvents[_eventWriteIndex] = gameplayEvent;
+        _eventWriteIndex = (_eventWriteIndex + 1) % GameplayEventCapacity;
+        _eventCount++;
+        GameplayEventPublished?.Invoke(gameplayEvent);
+    }
+
+    internal bool TryDequeueGameplayEvent(out CoreGameplayEvent gameplayEvent)
+    {
+        if (_eventCount == 0)
+        {
+            gameplayEvent = default;
+            return false;
+        }
+
+        gameplayEvent = _gameplayEvents[_eventReadIndex];
+        _eventReadIndex = (_eventReadIndex + 1) % GameplayEventCapacity;
+        _eventCount--;
+        return true;
+    }
+
+    internal void PublishCrisisSnapshot(CrisisSnapshot snapshot)
+    {
+        _latestCrisis = snapshot;
+        CrisisSnapshotPublished?.Invoke(snapshot);
     }
 
     public void RegisterEntity(GameEntityData entity)
