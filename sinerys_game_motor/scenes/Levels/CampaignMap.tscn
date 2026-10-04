@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://campaign_map_scene"]
+
+[ext_resource type="Script" path="res://scripts/Campaign/CampaignMapView.cs" id="1"]
+
+[node name="CampaignMap" type="Node2D"]
+script = ExtResource("1")

@@ -1,0 +1,68 @@
+{
+  "bosses": [
+    {
+      "id": "verdugo",
+      "name": "El Verdugo",
+      "missionId": 6,
+      "health": 500,
+      "damage": 40,
+      "speed": 2.5,
+      "phases": [
+        { "name": "Fase 1", "healthThreshold": 100, "behavior": "aggressive", "attackPattern": "melee_combo" },
+        { "name": "Fase 2", "healthThreshold": 50, "behavior": "berserk", "attackPattern": "aoe_slam" }
+      ]
+    },
+    {
+      "id": "arana",
+      "name": "La Arana Mecanica",
+      "missionId": 14,
+      "health": 800,
+      "damage": 35,
+      "speed": 3.0,
+      "phases": [
+        { "name": "Fase 1", "healthThreshold": 100, "behavior": "ranged", "attackPattern": "web_barrage" },
+        { "name": "Fase 2", "healthThreshold": 60, "behavior": "summon", "attackPattern": "spawn_minions" },
+        { "name": "Fase 3", "healthThreshold": 30, "behavior": "berserk", "attackPattern": "charge_attack" }
+      ]
+    },
+    {
+      "id": "titan",
+      "name": "El Titan",
+      "missionId": 20,
+      "health": 1500,
+      "damage": 50,
+      "speed": 1.5,
+      "phases": [
+        { "name": "Fase 1", "healthThreshold": 100, "behavior": "defensive", "attackPattern": "rocket_barrage" },
+        { "name": "Fase 2", "healthThreshold": 50, "behavior": "berserk", "attackPattern": "ground_pound" }
+      ]
+    },
+    {
+      "id": "general",
+      "name": "El General",
+      "missionId": 26,
+      "health": 2500,
+      "damage": 55,
+      "speed": 3.5,
+      "phases": [
+        { "name": "Fase 1", "healthThreshold": 100, "behavior": "tactical", "attackPattern": "command_units" },
+        { "name": "Fase 2", "healthThreshold": 70, "behavior": "aggressive", "attackPattern": "dual_wield" },
+        { "name": "Fase 3", "healthThreshold": 30, "behavior": "berserk", "attackPattern": "nuke_call" }
+      ]
+    },
+    {
+      "id": "entidad",
+      "name": "La Entidad",
+      "missionId": 29,
+      "health": 5000,
+      "damage": 70,
+      "speed": 4.0,
+      "phases": [
+        { "name": "Fase 1", "healthThreshold": 100, "behavior": "ranged", "attackPattern": "energy_blast" },
+        { "name": "Fase 2", "healthThreshold": 75, "behavior": "summon", "attackPattern": "portal_horde" },
+        { "name": "Fase 3", "healthThreshold": 50, "behavior": "berserk", "attackPattern": "reality_warp" },
+        { "name": "Fase 4", "healthThreshold": 25, "behavior": "final", "attackPattern": "annihilation" }
+      ]
+    }
+  ]
+}

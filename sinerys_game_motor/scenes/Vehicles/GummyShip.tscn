@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://gummy_ship_scene"]
+
+[ext_resource type="Script" path="res://scripts/Vehicles/GummyShipController.cs" id="1"]
+
+[node name="GummyShip" type="Node3D"]
+script = ExtResource("1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.7, 0.7, 0, -0.7, 0.7, 0, 20, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")

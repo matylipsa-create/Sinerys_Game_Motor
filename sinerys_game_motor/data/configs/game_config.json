@@ -1,0 +1,52 @@
+{
+  "player": {
+    "maxHealth": 100,
+    "moveSpeed": 6.0,
+    "jumpVelocity": 4.5,
+    "mouseSensitivity": 0.002,
+    "attackDamage": 25.0,
+    "attackRange": 50.0
+  },
+  "combat": {
+    "waveStartDelay": 2.0,
+    "waveClearedDelay": 3.0,
+    "maxSimultaneousPortals": 3,
+    "portalSpawnRadius": 25.0,
+    "portalLifetime": 5.0,
+    "scorePerKill": 100,
+    "scorePerHit": 10
+  },
+  "enemies": {
+    "grunt": { "health": 30, "damage": 8, "speed": 4.0, "attackRange": 2.0, "attackCooldown": 1.5 },
+    "soldier": { "health": 60, "damage": 15, "speed": 3.0, "attackRange": 2.0, "attackCooldown": 1.5 },
+    "heavy": { "health": 120, "damage": 25, "speed": 1.5, "attackRange": 3.0, "attackCooldown": 2.0 },
+    "kamikaze": { "health": 20, "damage": 40, "speed": 6.0, "attackRange": 2.0, "attackCooldown": 0.5 },
+    "boss": { "health": 500, "damage": 40, "speed": 2.5, "attackRange": 4.0, "attackCooldown": 2.5 }
+  },
+  "campaign": {
+    "totalMissions": 30,
+    "nodeSpacing": 120,
+    "nodeRadius": 30,
+    "connectionLineWidth": 3
+  },
+  "vehicles": {
+    "bonusStage": {
+      "forwardSpeed": 20.0,
+      "strafeSpeed": 10.0,
+      "boostMultiplier": 2.0,
+      "timeLimit": 60.0
+    },
+    "gummyShip": {
+      "moveSpeed": 15.0,
+      "rollSpeed": 3.0,
+      "fireRate": 0.15,
+      "timeLimit": 90.0
+    }
+  },
+  "transitions": {
+    "defaultDuration": 0.8,
+    "missionEntry": 1.0,
+    "vehicleLaunch": 1.2,
+    "menuFade": 0.5
+  }
+}

@@ -1,0 +1,5 @@
+<svg height="128" width="128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" fill="#1a1a2e" rx="16"/>
+  <path d="M32 32 L96 32 L96 96 L32 96 Z" fill="#16213e" stroke="#0f3460" stroke-width="2" rx="8"/>
+  <text x="64" y="72" font-family="Arial" font-size="28" font-weight="bold" fill="#e94560" text-anchor="middle">SGM</text>
+</svg>

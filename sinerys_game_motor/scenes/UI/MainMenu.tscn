@@ -1,0 +1,69 @@
+[gd_scene load_steps=1 format=3 uid="uid://main_menu_scene"]
+
+[ext_resource type="Script" path="res://scripts/Core/GlobalManager.cs" id="1"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.12, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200
+offset_top = 80
+offset_right = 200
+offset_bottom = 140
+theme_override_font_sizes/font_size = 48
+text = "SINERYS GAME MOTOR"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200
+offset_top = 145
+offset_right = 200
+offset_bottom = 170
+theme_override_font_sizes/font_size = 16
+text = "Can You Survive — 30 Mission Campaign"
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100
+offset_top = 300
+offset_right = 100
+offset_bottom = 340
+text = "Start Campaign"
+
+[node name="ExitButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100
+offset_top = 360
+offset_right = 100
+offset_bottom = 400
+text = "Exit"
+
+[connection signal="pressed" from="StartButton" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="ExitButton" to="." method="_on_exit_pressed"]
