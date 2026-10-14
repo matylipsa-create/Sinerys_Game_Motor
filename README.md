@@ -1,131 +1,158 @@
-# Sinerys Game Motor
+# Sinerys Perception Motor (Sinerys Game Motor)
 
 <div align="center">
-
-  <img src="https://raw.githubusercontent.com/matylipsa-create/Sinerys_Game_Motor/main/public/favicon.svg" alt="Sinerys Game Motor Logo" width="180" />
-
-  <h3>Sentra Core • Orchestrator • Interactive Systems</h3>
-
+  <img src="https://raw.githubusercontent.com/matylipsa-create/Sinerys_Game_Motor/main/public/favicon.svg" alt="Sinerys Logo" width="140" />
+  <h3>Sistema de percepción agnóstico • SDK para motores (Unreal / Godot)</h3>
   <p>
-    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-4.9%2B-3178C6?logo=typescript&logoColor=white" />
-    <img alt="Vite" src="https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white" />
-    <img alt="React" src="https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black" />
-    <img alt="Open Source" src="https://img.shields.io/badge/License-Open%20Source-green" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-68%25-3178C6?logo=typescript&logoColor=white" />
+    <img alt="C#" src="https://img.shields.io/badge/C%23-15%25-239120?logo=c-sharp&logoColor=white" />
+    <img alt="C++" src="https://img.shields.io/badge/C%2B%2B-3%25-00599C?logo=c%2B%2B&logoColor=white" />
+    <img alt="License" src="https://img.shields.io/badge/License-Open%20Source-green" />
   </p>
-
 </div>
 
 ```text
-   ███████╗███╗   ██╗██████╗ ███████╗██╗███╗   ██╗████████╗ ██████╗  █████╗ ██╗   ██╗
-   ██╔════╝████╗  ██║██╔══██╗██╔════╝██║████╗  ██║╚══██╔══╝██╔═══██╗██╔══██╗██║   ██║
-   ███████╗██╔██╗ ██║██████╔╝█████╗  ██║██╔██╗ ██║   ██║   ██║   ██║███████║██║   ██║
-   ╚════██║██║╚██╗██║██╔══██╗██╔══╝  ██║██║╚██╗██║   ██║   ██║   ██║██╔══██║██║   ██║
-   ███████║██║ ╚████║██║  ██║███████╗██║██║ ╚████║   ██║   ╚██████╔╝██║  ██║╚██████╔╝
-   ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝
+   _____ _         _                  ____                      _
+  / ____| |       (_)                |  _ \                    | |
+ | (___ | |__  ___ _  ___  _ __ ___  | |_) | ___  _   _   _ __ | |_
+  \___ \| '_ \/ __| |/ _ \| '_ ` _ \ |  _ < / _ \| | | | | '_ \| __|
+  ____) | | | \__ \ | (_) | | | | | || |_) | (_) | |_| |_| | | | |_
+ |_____/|_| |_|___/_|\___/|_| |_| |_||____/ \___/ \__,_(_) |_|\__|
 ```
 
-Sinerys Game Motor es un proyecto de software orientado a la construcción de sistemas interactivos, infraestructura de control y orquestación para experiencias digitales modernas. El repositorio combina frontend, backend, servicios, infraestructura de firmware y módulos compartidos para crear una base técnica reutilizable, escalable y lista para evolucionar.
+Resumen
 
-La intención del proyecto es proporcionar una base sólida para aplicaciones y experiencias inmersivas, con foco en organización, flujo de datos, interfaces de control y arquitectura modular.
+Sinerys Perception Motor es un motor de percepción y procesamiento sensorial diseñado para integrarse como un SDK en motores y runtimes (Unreal Engine, Godot u otros). Su objetivo es ofrecer una capa agnóstica que procese datos de sensores, realice fusión sensorial, detección de eventos y entregue una API clara para que proyectos de interacción, VR/AR, robotics o entornos de juego puedan consumir resultados en tiempo real.
 
-## Visión
+Principales ideas de diseño
 
-Sinerys Game Motor está diseñado para servir como base de desarrollo para plataformas interactivas, paneles de control, servicios de operación y módulos funcionales reutilizables. Su esencia es combinar claridad de arquitectura, mantenimiento sencillo y capacidad de extensión.
+- Agnóstico respecto al motor: núcleos en C/C++ con bindings en C# y capas de integración para Unreal/Godot.
+- Enfoque en baja latencia y precisión en la detección/percepción.
+- Pipeline modular: adquisición → preprocesado → inferencia/detección → publicación de eventos.
+- Herramientas auxiliares en TypeScript/Node.js para procesamiento offline, dashboards y telemetría.
 
-## Características principales
+Características principales
 
-- Arquitectura modular y escalable
-- Separación clara entre frontend, backend y servicios
-- Infraestructura orientada a flujo de trabajo y orquestación
-- Compatibilidad con herramientas modernas de desarrollo web
-- Base preparada para integración con sistemas de control e interacción
-- Estructura pensada para crecimiento y colaboración
+- Núcleo en C/C++ optimizado para rendimiento.
+- Bindings y wrappers en C# para integración con runtimes que usan .NET/Mono.
+- Soporte de integración experimental con Godot (GDNative / GDExtension) y plantillas para Unreal (plugin C++).
+- Módulos de fusión sensorial y detección de eventos configurables.
+- Canal de telemetría y backend opcional para almacenar eventos y métricas (server/).
+- Panel de control / visualizador (frontend/) para monitorización y ajuste de parámetros.
+- Ejemplos y prototipos en godot/ para validar integración y comportamiento.
 
-## Estructura del repositorio
+Estructura del repositorio
 
 ```text
 Sinerys_Game_Motor/
-├── .github/                  # Configuración y workflows de GitHub
-├── docs/                     # Documentación técnica y de arquitectura
-├── firmware/                 # Módulos y recursos relacionados con firmware
-├── frontend/                 # Aplicación web / capa de experiencia de usuario
-├── godot/                    # Prototipos o experimentos de integración
-├── scripts/                  # Scripts auxiliares del proyecto
-├── server/                   # Servicios y APIs del backend
-├── sinerys_game_motor/       # Módulo principal del motor
-├── src/                      # Código base del proyecto y lógica compartida
-├── tests/                    # Casos de prueba y validación
-├── ARCHITECTURE.md           # Documentación de arquitectura
-├── README.md                 # Documentación principal
-├── package.json              # Dependencias y scripts del proyecto
-├── vite.config.ts            # Configuración de Vite
-├── tsconfig.json             # Configuración de TypeScript
-├── tailwind.config.js        # Configuración de Tailwind
-├── index.html                # Punto de entrada web
-└── package-lock.json         # Lockfile de npm
+├── .github/              # Workflows y config
+├── docs/                 # Documentación técnica e integración
+├── firmware/             # Drivers y firmware para sensores (si aplica)
+├── frontend/             # Dashboard / herramientas web (TypeScript)
+├── godot/                # Ejemplos y bindings para Godot (prototipos)
+├── server/               # Backend opcional para telemetría y APIs
+├── sinerys_game_motor/   # Código fuente del motor (C/C++ core / bindings)
+├── src/                  # Librerías y utilidades (TypeScript / shared)
+├── tests/                # Tests y validaciones
+├── ARCHITECTURE.md       # Documentación de arquitectura
+├── README.md             # Este archivo
+└── package.json          # Scripts e integración para herramientas
 ```
 
-## Stack principal
+Soportes e integraciones
 
-- TypeScript
-- React
-- Vite
-- Tailwind CSS
-- Node.js / servicios backend
-- Infraestructura de integración y orquestación
+- Unreal Engine: plugin C++ (puede usar el core en C++ para enlazar, exponer una API que publique eventos a Blueprints/C++).
+- Godot: integración por GDExtension / GDNative (bindings a C++ o adaptadores en GDScript) — ver carpeta godot/.
+- Node.js / TypeScript: herramientas de ingestión, visualización y pruebas (frontend/ y src/).
+- Microcontroladores / sensores: firmware/ contiene ejemplos y utilidades para adquisición de datos.
 
-## Inicio rápido
+Quickstart — integración básica
 
-Requisitos:
+Unreal (resumen):
+1. Compila el core C++ como una librería estática o dinámica para la plataforma target.
+2. Crea un plugin de Unreal que enlace con la librería y exponga una clase manager: USinerysPerceptionManager.
+3. Desde Blueprints o C++ suscríbete a los eventos de percepción publicados por el manager.
 
-- Node.js 18+
-- npm
+Godot (resumen):
+1. Compila la extensión GDExtension/GDNative enlazando con el core C++.
+2. Publica un objeto `SinerysPerception` con señales para eventos detectados.
+3. Usa el ejemplo en godot/ como plantilla para arrancar.
+
+Node / Herramientas CLI (local):
 
 ```bash
+# instalar dependencias para herramientas y frontend
 npm install
+# arrancar dashboard y herramientas
 npm run dev
 ```
 
-Validación de tipos y build:
+Construcción y tests
 
-```bash
-npm run typecheck
-npm run build
-```
+- Compilar el core C++: revisa sinerys_game_motor/README (o docs/) para instrucciones por plataforma.
+- Bindings C#: revisar proyectos en `sinerys_game_motor/bindings_cs/` o `src/bindings-csharp/` si existen.
+- Testeo: `npm run test` para pruebas JS/TS; tests de integridad para el core en tests/.
 
-## Arquitectura
+API (visión general)
 
-El proyecto está organizado para separar responsabilidades y facilitar la evolución del sistema:
+Exponeré aquí una vista de alto nivel — revisa las definiciones en el código para detalles concretos:
 
-- `src/`: lógica principal y módulos reutilizables
-- `frontend/`: interfaces de usuario y experiencia visual
-- `server/`: servicios, APIs y lógica de negocio
-- `firmware/`: componentes de hardware o integración especializada
-- `docs/`: documentación y decisiones técnicas
-- `godot/`: prototipos e integración experimental
+- PerceptionCore
+  - init(config)
+  - start()
+  - stop()
+  - registerHandler(callback/event)
+  - setParameters(params)
 
-## Objetivo del proyecto
+- Event
+  - timestamp
+  - type (e.g., "object_detected", "proximity", "gesture")
+  - payload (posición, confidence, metadata)
 
-Construir un motor técnico robusto y profesional para sistemas interactivos, con una base clara de desarrollo, mantenimiento y expansión. El enfoque está en crear una plataforma que pueda crecer sin perder claridad de diseño ni facilidad de trabajo en equipo.
+Buenas prácticas para integración
 
-## Estado
+- Mantener el núcleo en C/C++ compacto y estable; exponer API mínima y estable.
+- Implementar adaptadores por motor: plugin de Unreal y GDExtension para Godot.
+- Validar latencia y throughput en escenario real con sensores.
+- Añadir capas de seguridad y autenticación si se hace telemetría remota.
 
-Proyecto en desarrollo activo, con estructura organizada para crecer hacia un sistema más completo, profesional y reutilizable.
+Documentación y ejemplos
 
-## Contribución
+- docs/ — guía de integración, descripción del pipeline y formatos de eventos.
+- godot/ — ejemplo de cliente/plantilla para Godot.
+- frontend/ — dashboard para ver eventos en tiempo real y ajustar parámetros.
 
-Las contribuciones son bienvenidas. Si deseas colaborar:
+Estado y roadmap sugerido
 
-1. Haz un fork del proyecto
-2. Crea una rama para tu cambio
-3. Realiza tus mejoras con documentación clara
-4. Abre un pull request con una descripción detallada
+- Estado actual: base técnica con múltiples componentes (core, bindings, herramientas). Funcionalidades de percepción implementadas como módulos, con ejemplos experimentales.
+- Próximos pasos recomendados:
+  1. Documentar el ABI/C API del core y publicar ejemplos de compilación por plataforma.
+  2. Completar y documentar el plugin de Unreal (ejemplo mínimo que genere eventos en el Editor).
+  3. Consolidar GDExtension para Godot con empaquetado simple.
+  4. Añadir tests de integración de extremo a extremo y demos reproducibles.
 
-## Contacto
+Contribuir
+
+Gracias por tu interés en contribuir. Para colaborar:
+
+1. Haz fork del repositorio
+2. Crea una rama descriptiva (feature/perception-xyz)
+3. Añade tests y documentación para cambios
+4. Abre un PR con descripción y screenshots / logs si aplican
+
+Licencia
+
+Este proyecto es de código abierto. Indica en LICENSE la licencia que uses (ej. MIT, Apache-2.0).
+
+Contacto
 
 - GitHub: https://github.com/matylipsa-create
-- Repositorio: https://github.com/matylipsa-create/Sinerys_Game_Motor
+- Repo: https://github.com/matylipsa-create/Sinerys_Game_Motor
 
 ---
 
-Diseñado para ser un proyecto limpio, profesional y listo para crecer con una base técnica sólida.
+He actualizado el README para reflejar que este proyecto es un motor de percepción agnóstico pensado para integrarse como SDK en Unreal, Godot y otros runtimes. Si querés, puedo:
+
+- Añadir secciones concretas con comandos de compilación por plataforma.
+- Crear archivos en docs/ con guías paso a paso para Unreal y Godot.
+- Generar ejemplos mínimos de plugin para Unreal (esqueleto) y GDExtension para Godot y subirlos a godot/ y sinerys_game_motor/bindings/.
