@@ -1,56 +1,131 @@
-# Conquer of Darkness
+# Sinerys Game Motor
 
-**Un prototipo de supervivencia sci-fi impulsado por Sentra Core Orchestrator.**
+<div align="center">
 
-El refugio no sigue un guion. El mundo responde. Conquer of Darkness explora una colonia al borde del colapso, donde las decisiones del jugador alteran la moral, los recursos, las facciones y las condiciones de la siguiente crisis.
+  <img src="https://raw.githubusercontent.com/matylipsa-create/Sinerys_Game_Motor/main/public/favicon.svg" alt="Sinerys Game Motor Logo" width="180" />
 
-> Un mundo hostil. Un refugio que decide. Un orquestador que recuerda.
+  <h3>Sentra Core • Orchestrator • Interactive Systems</h3>
 
-## Demo
+  <p>
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-4.9%2B-3178C6?logo=typescript&logoColor=white" />
+    <img alt="Vite" src="https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white" />
+    <img alt="React" src="https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black" />
+    <img alt="Open Source" src="https://img.shields.io/badge/License-Open%20Source-green" />
+  </p>
 
-La aplicacion web incluye una demo operativa de crisis estrategicas y paneles para explorar el motor:
+</div>
 
-- `/game` — centro de operaciones: resuelve crisis y observa sus efectos sobre el refugio.
-- `/arena` — sala táctica PWA con tutorial de succión, mutágenos y Bash.
-- `/core` — dashboard de Sentra Core y su estado multiversal.
-- `/master-engine` — controles del motor maestro.
+```text
+   ███████╗███╗   ██╗██████╗ ███████╗██╗███╗   ██╗████████╗ ██████╗  █████╗ ██╗   ██╗
+   ██╔════╝████╗  ██║██╔══██╗██╔════╝██║████╗  ██║╚══██╔══╝██╔═══██╗██╔══██╗██║   ██║
+   ███████╗██╔██╗ ██║██████╔╝█████╗  ██║██╔██╗ ██║   ██║   ██║   ██║███████║██║   ██║
+   ╚════██║██║╚██╗██║██╔══██╗██╔══╝  ██║██║╚██╗██║   ██║   ██║   ██║██╔══██║██║   ██║
+   ███████║██║ ╚████║██║  ██║███████╗██║██║ ╚████║   ██║   ╚██████╔╝██║  ██║╚██████╔╝
+   ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝
+```
 
-La portada en `/` conecta las superficies gaming y presenta el ciclo del orquestador. La cámara y la demo visual de Sentra Core Orchestrator no forman parte de esta PWA gaming.
+Sinerys Game Motor es un proyecto de software orientado a la construcción de sistemas interactivos, infraestructura de control y orquestación para experiencias digitales modernas. El repositorio combina frontend, backend, servicios, infraestructura de firmware y módulos compartidos para crear una base técnica reutilizable, escalable y lista para evolucionar.
 
-## Sentra Core Orchestrator
+La intención del proyecto es proporcionar una base sólida para aplicaciones y experiencias inmersivas, con foco en organización, flujo de datos, interfaces de control y arquitectura modular.
 
-El core conecta percepcion, decisiones y cambios persistentes del mundo. La base actual contiene sistemas de crisis estrategicas, deriva multiversal, memoria de civilizacion, facciones, comportamiento adaptativo y una capa de eventos para entidades de juego.
+## Visión
 
-El proyecto es un prototipo de software: **todavia no incluye un runtime 3D completo, simulacion fisica, guardado durable multiplataforma ni networking multijugador**. La carpeta `godot/` contiene un controlador experimental; no forma parte del build web de Vite.
+Sinerys Game Motor está diseñado para servir como base de desarrollo para plataformas interactivas, paneles de control, servicios de operación y módulos funcionales reutilizables. Su esencia es combinar claridad de arquitectura, mantenimiento sencillo y capacidad de extensión.
 
-### Objetivo experimental de Godot
+## Características principales
 
-La carpeta `godot/` contiene prototipos para un futuro runtime Godot 4.x: puente acotado con Sentra Core, utilidades voxel, streaming asincrono, controlador, materiales pixel-toon y postproceso Mantis. El renderer Compatibility y un presupuesto de 32 MiB de VRAM son objetivos de diseño, no resultados certificados. Este repositorio no incluye todavia el proyecto anfitrion (`project.godot`, escenas ni `.csproj`), por lo que no se pueden confirmar aqui la compilacion Godot, la compatibilidad final de shaders ni los FPS/VRAM en hardware real. Consulta [la guia tecnica de los sistemas Godot](./docs/GODOT_GAMEPLAY_SYSTEMS.md) para el cableado y los limites conocidos.
+- Arquitectura modular y escalable
+- Separación clara entre frontend, backend y servicios
+- Infraestructura orientada a flujo de trabajo y orquestación
+- Compatibilidad con herramientas modernas de desarrollo web
+- Base preparada para integración con sistemas de control e interacción
+- Estructura pensada para crecimiento y colaboración
 
-## Desarrollo local
+## Estructura del repositorio
 
-Requiere Node.js y npm.
+```text
+Sinerys_Game_Motor/
+├── .github/                  # Configuración y workflows de GitHub
+├── docs/                     # Documentación técnica y de arquitectura
+├── firmware/                 # Módulos y recursos relacionados con firmware
+├── frontend/                 # Aplicación web / capa de experiencia de usuario
+├── godot/                    # Prototipos o experimentos de integración
+├── scripts/                  # Scripts auxiliares del proyecto
+├── server/                   # Servicios y APIs del backend
+├── sinerys_game_motor/       # Módulo principal del motor
+├── src/                      # Código base del proyecto y lógica compartida
+├── tests/                    # Casos de prueba y validación
+├── ARCHITECTURE.md           # Documentación de arquitectura
+├── README.md                 # Documentación principal
+├── package.json              # Dependencias y scripts del proyecto
+├── vite.config.ts            # Configuración de Vite
+├── tsconfig.json             # Configuración de TypeScript
+├── tailwind.config.js        # Configuración de Tailwind
+├── index.html                # Punto de entrada web
+└── package-lock.json         # Lockfile de npm
+```
+
+## Stack principal
+
+- TypeScript
+- React
+- Vite
+- Tailwind CSS
+- Node.js / servicios backend
+- Infraestructura de integración y orquestación
+
+## Inicio rápido
+
+Requisitos:
+
+- Node.js 18+
+- npm
 
 ```bash
-npm ci
+npm install
 npm run dev
 ```
 
-Verificacion de tipos y build de produccion:
+Validación de tipos y build:
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-## Mapa del repositorio
+## Arquitectura
 
-- `src/core/` — orquestador y sistemas de juego escritos en TypeScript.
-- `src/components/` — portada, dashboards e interfaces de la aplicacion.
-- `godot/` — prototipos de control para una futura integracion con Godot.
-- `docs/` — arquitectura, perception y decisiones del proyecto.
-- `server/` — servicios auxiliares y protocolos de Sentra.
+El proyecto está organizado para separar responsabilidades y facilitar la evolución del sistema:
 
-## Direccion
+- `src/`: lógica principal y módulos reutilizables
+- `frontend/`: interfaces de usuario y experiencia visual
+- `server/`: servicios, APIs y lógica de negocio
+- `firmware/`: componentes de hardware o integración especializada
+- `docs/`: documentación y decisiones técnicas
+- `godot/`: prototipos e integración experimental
 
-Conquer of Darkness es la linea gaming de Sentra Core. El siguiente paso es convertir los sistemas adaptativos y las decisiones trazables en un runtime jugable mas amplio, manteniendo la ejecucion local, la accesibilidad y el control del jugador.
+## Objetivo del proyecto
+
+Construir un motor técnico robusto y profesional para sistemas interactivos, con una base clara de desarrollo, mantenimiento y expansión. El enfoque está en crear una plataforma que pueda crecer sin perder claridad de diseño ni facilidad de trabajo en equipo.
+
+## Estado
+
+Proyecto en desarrollo activo, con estructura organizada para crecer hacia un sistema más completo, profesional y reutilizable.
+
+## Contribución
+
+Las contribuciones son bienvenidas. Si deseas colaborar:
+
+1. Haz un fork del proyecto
+2. Crea una rama para tu cambio
+3. Realiza tus mejoras con documentación clara
+4. Abre un pull request con una descripción detallada
+
+## Contacto
+
+- GitHub: https://github.com/matylipsa-create
+- Repositorio: https://github.com/matylipsa-create/Sinerys_Game_Motor
+
+---
+
+Diseñado para ser un proyecto limpio, profesional y listo para crecer con una base técnica sólida.
